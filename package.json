@@ -1,17 +1,18 @@
 {
-  "name": "key-rotate",
+  "name": "circleci-aws-key-rotate",
   "version": "1.0.0",
-  "description": "CircleCI Key Rotation",
+  "description": "CircleCI AWS Access Key Rotation",
   "main": ".build/src/handler.js",
   "scripts": {
-    "clean": "rm -rf .build && rm -rf .serverless && rm -rf lambda.zip",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "clean": "rm -rf .build && rm -rf .serverless",
     "build": "npm run lint && tsc",
+    "deploy": "serverless deploy",
     "clean-build": "npm run clean && npm run build",
     "test": "jest"
   },
   "author": "Dom Parfitt",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.374.0"
   },
@@ -20,13 +21,15 @@
     "@types/jest": "^23.3.10",
     "@types/node": "^10.12.14",
     "@types/promise.prototype.finally": "^2.0.2",
+    "@types/uuid": "^3.4.4",
     "aws-sdk-mock": "^4.3.0",
     "jest": "^23.6.0",
     "serverless": "^1.35.0",
     "serverless-offline": "^3.31.3",
     "serverless-plugin-typescript": "^1.1.5",
     "ts-jest": "^23.10.5",
-    "tslint": "^5.11.0"
+    "tslint": "^5.11.0",
+    "uuid": "^3.3.2"
   },
   "jest": {
     "roots": [
