@@ -9,7 +9,6 @@
     "sourceMap": true,
     "allowJs": true,
     "noImplicitAny": true,
-    "noUnusedLocals": false,
     "noImplicitThis": true,
     "strictNullChecks": true,
     "noImplicitReturns": true,
