@@ -1,0 +1,31 @@
+service: 
+  name: circleci-key-rotator
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: eu-west-2
+  memorySize: 128
+  environment:
+    CIRCLECI_IAM_USER: ${opt:awsUser}
+    PROJECT_NAME: ${opt:projectName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - iam:ListAccessKeys
+        - iam:GetAccessKeyLastUsed
+        - iam:DeleteAccessKey
+        - iam:CreateAccessKey
+        - iam:UpdateAccessKey
+      Resource: 
+        - arn:aws:iam::${opt:awsAccountId}:user/${opt:awsUser}
+        
+functions:
+  rotate:
+    handler: src/handler.rotateKeys
+    events:
+      - schedule: cron(0 10 * * ? *)
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
