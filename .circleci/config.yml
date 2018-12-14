@@ -20,7 +20,7 @@ jobs:
           name: Unit test
           command: 'npm test'
       - store_test_results:
-          path: test-results
+          path: /coverage
 
 workflows:
   version: 2
