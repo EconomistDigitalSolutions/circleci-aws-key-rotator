@@ -4,9 +4,11 @@ service:
 provider:
   name: aws
   runtime: nodejs8.10
-  region: eu-west-2
+  region: ${opt:region, 'eu-west-2'}
   memorySize: 128
   environment:
+    VCS_PROVIDER: ${opt:vcs, 'github'}
+    VCS_USER: ${opt:vcsUser, 'EconomistDigitalSolutions'}
     CIRCLECI_IAM_USER: ${opt:awsUser}
     PROJECT_NAME: ${opt:projectName}
   iamRoleStatements:

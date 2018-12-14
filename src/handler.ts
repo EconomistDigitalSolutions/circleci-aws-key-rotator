@@ -4,7 +4,7 @@ import { KeyRotator } from "./keyRotator";
 
 export function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
 
-    const url = `https://circleci.com/api/v1.1/project/github/EconomistDigitalSolutions/${process.env.PROJECT_NAME}/envvar?circle-token=${process.env.CIRCLECI_TOKEN}`;
+    const url = `https://circleci.com/api/v1.1/project/${process.env.VCS_PROVIDER}/${process.env.VCS_USER}/${process.env.PROJECT_NAME}/envvar?circle-token=${process.env.CIRCLECI_TOKEN}`;
     const user = process.env.CIRCLECI_IAM_USER;
 
     // Closure for creating the response
