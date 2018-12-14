@@ -1,8 +1,6 @@
 import { IAM } from "aws-sdk";
 import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, ListAccessKeysRequest } from "aws-sdk/clients/iam";
-
-const ACTIVE = 'Active';
-const INACTIVE = 'Inactive';
+import { ACTIVE, INACTIVE } from "./keyStatus";
 
 export class KeyRotator {
 
@@ -25,15 +23,14 @@ export class KeyRotator {
      */
     public rotateKeys(user: string) {
         return this.getExistingKeys(user)
-            .then(this.showKeys)
             .then(this.deleteInactiveKeys)
-            .then(this.showKeys)
             .then((keys) => {
                 this.createNewKey(user);
-                    // .then(this.sendNewKey);
+                // .then(this.sendNewKey);
                 return keys;
             })
             .then(this.deactivateOldKeys)
+            .then(() => { return; })
             .catch((err) => {
                 this.handlerError(err);
             });
@@ -44,6 +41,7 @@ export class KeyRotator {
      * @param user the IAM User to get the Access Keys for
      */
     private getExistingKeys = (user: string): Promise<AccessKeyMetadata[]> => {
+        console.log(`Retrieving existing keys for User ${user}`);
         const params: ListAccessKeysRequest = {
             UserName: user,
         };
@@ -51,6 +49,7 @@ export class KeyRotator {
         return this.iam.listAccessKeys(params)
             .promise()
             .then((data) => {
+                console.log(`Retrieved the following keys for User ${user}: ${JSON.stringify(data.AccessKeyMetadata)}`);
                 return Promise.resolve(data.AccessKeyMetadata);
             })
             .catch((err) => {
@@ -58,19 +57,14 @@ export class KeyRotator {
             });
     }
 
-    private showKeys = (keys: AccessKeyMetadata[]): Promise<AccessKeyMetadata[]> => {
-        console.log("Show Keys");
-        console.log(keys);
-        console.log("Showed Keys");
-        return Promise.resolve(keys);
-    }
-
     /**
      * Deletes any inactive keys in the given list
      * @param keys a list of IAM Access Keys
      */
     private deleteInactiveKeys = (keys: AccessKeyMetadata[]): Promise<AccessKeyMetadata[]> => {
+        console.log('Deleting inactive keys');
         const inactiveKeys = keys.filter((key) => key.Status === INACTIVE && key.AccessKeyId);
+        console.log(`The following keys are inactive and will be deleted: ${JSON.stringify(inactiveKeys)}`);
         inactiveKeys.forEach(this.deleteKey);
         return Promise.resolve(keys);
     }
@@ -98,7 +92,9 @@ export class KeyRotator {
      * @param keys a list of IAM Access Keys
      */
     private deactivateOldKeys = (keys: AccessKeyMetadata[]): Promise<AccessKeyMetadata[]> => {
+        console.log(`Deactivating old keys from: ${JSON.stringify(keys)}`);
         const activeKeys = keys.filter((key) => key.Status === ACTIVE && key.AccessKeyId);
+        console.log(`The following keys will be deactivated: ${JSON.stringify(activeKeys)}`);
         activeKeys.forEach(this.deactivateKey);
         return Promise.resolve(keys);
     }
