@@ -1,11 +1,16 @@
 import { Callback } from "aws-lambda";
 import { IAM } from "aws-sdk";
 import * as AWS from "aws-sdk-mock";
-import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, DeleteAccessKeyRequest, ListAccessKeysRequest, UpdateAccessKeyRequest} from "aws-sdk/clients/iam";
+import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, DeleteAccessKeyRequest, ListAccessKeysRequest, UpdateAccessKeyRequest } from "aws-sdk/clients/iam";
+import * as uuidv4 from "uuid/v4";
 import { KeyRotator } from "./keyRotator";
+import { ACTIVE, INACTIVE } from "./keyStatus";
+
+const user = 'TestUser';
 
 let iam: IAM;
 let keys: AccessKeyMetadata[];
+let newKey: AccessKeyMetadata;
 let keyRotator: KeyRotator;
 
 // SETUP
@@ -30,15 +35,14 @@ afterAll(() => {
 
 // TESTS
 test('no existing keys', (done) => {
-    keyRotator.rotateKeys('')
-        .then((newKeys) => {
-            if (!newKeys) {
-                fail();
-                done();
-                return;
-            }
-            expect(newKeys.length).toBe(1);
-            expect(newKeys[0].Status).toBe(ACTIVE);
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
+
+            // Expect there to be a single key and it should be active
+            expect(keys.length).toBe(1);
+            expect(newKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
             done();
         });
 });
@@ -47,16 +51,20 @@ test('1 active key', (done) => {
     const existingKey = createKey(ACTIVE);
     keys.push(existingKey);
 
-    keyRotator.rotateKeys('')
-        .then((newKeys) => {
-            if (!newKeys) {
-                fail();
-                done();
-                return;
-            }
-            expect(newKeys.length).toBe(2);
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
+
+            // Expect there to be 2 keys
+            expect(keys.length).toBe(2);
+
+            // Existing key should be present but inactive
             expect(existingKey.Status).toBe(INACTIVE);
-            // expect new key to be active
+            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
+
+            // New key should be present and active
+            expect(newKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
             done();
         });
 });
@@ -65,16 +73,19 @@ test('1 inactive key', (done) => {
     const existingKey = createKey(INACTIVE);
     keys.push(existingKey);
 
-    keyRotator.rotateKeys('')
-        .then((newKeys) => {
-            if (!newKeys) {
-                fail();
-                done();
-                return;
-            }
-            expect(newKeys.length).toBe(1);
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
+
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
+
+            // Expect existing key to have been removed
             expect(keys.indexOf(existingKey)).toBe(-1);
-            // expect new key to be active
+
+            // Expect new key to be present and active
+            expect(newKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
             done();
         });
 });
@@ -86,17 +97,23 @@ test('1 active and 1 inactive key', (done) => {
     keys.push(existingInactiveKey);
     keys.push(existingActiveKey);
 
-    keyRotator.rotateKeys('')
-        .then((newKeys) => {
-            if (!newKeys) {
-                fail();
-                done();
-                return;
-            }
-            expect(newKeys.length).toBe(2);
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
+
+            // Expect there to be 2 keys
+            expect(keys.length).toBe(2);
+
+            // Expect existing inactive key to have been removed
             expect(keys.indexOf(existingInactiveKey)).toBe(-1);
+
+            // Expect existing active key to be present and inactive
             expect(existingActiveKey.Status).toBe(INACTIVE);
-            // expect new key to be active
+            expect(keys.indexOf(existingActiveKey)).toBeGreaterThanOrEqual(0);
+
+            // Expect new key to be present and active
+            expect(newKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
             done();
         });
 });
@@ -108,21 +125,26 @@ test('2 inactive keys', (done) => {
     keys.push(firstExistingKey);
     keys.push(secondExistingKey);
 
-    keyRotator.rotateKeys('')
-        .then((newKeys) => {
-            if (!newKeys) {
-                fail();
-                done();
-                return;
-            }
-            expect(newKeys.length).toBe(1);
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
+
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
+
+            // Expect both existing keys to have been removed
             expect(keys.indexOf(firstExistingKey)).toBe(-1);
             expect(keys.indexOf(secondExistingKey)).toBe(-1);
-            // expect new key to be active
+
+            // Expect new key to be present and active
+            expect(newKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
             done();
         });
 });
 
+// TODO: Think about what the correct handling for this scenario is. Need to assert which key has a
+// stronger claim, propagate it to existing users of the other key and then rotate as normal.
 // test('2 active keys', (done) => {
 //     const firstExistingKey = createKey(ACTIVE);
 //     const secondExistingKey = createKey(ACTIVE);
@@ -130,7 +152,7 @@ test('2 inactive keys', (done) => {
 //     keys.push(firstExistingKey);
 //     keys.push(secondExistingKey);
 
-//     keyRotator.rotateKeys('')
+//     keyRotator.rotateKeys(user)
 //         .then((newKeys) => {
 //             if (!newKeys) {
 //                 fail();
@@ -146,15 +168,11 @@ test('2 inactive keys', (done) => {
 // });
 
 // HELPERS
-const ACTIVE = 'Active';
-const INACTIVE = 'Inactive';
-// type KeyStatus = ACTIVE | INACTIVE;
-
 function createKey(status: string): AccessKeyMetadata {
     return {
-        AccessKeyId: '',
+        AccessKeyId: uuidv4(),
         Status: status,
-        UserName: '',
+        UserName: user,
     };
 }
 
@@ -176,29 +194,29 @@ function mockCreateAccessKey(params: CreateAccessKeyRequest, callback: Callback)
         return;
     }
 
-    const newKey: AccessKey = {
+    const accessKey: AccessKey = {
         UserName: params.UserName || "",
-        AccessKeyId: "",
+        AccessKeyId: uuidv4(),
         SecretAccessKey: "",
         Status: 'Active',
     };
 
-    keys.push({
-        AccessKeyId: newKey.AccessKeyId,
-        Status: newKey.Status,
-        UserName: newKey.UserName,
-    });
+    newKey = {
+        AccessKeyId: accessKey.AccessKeyId,
+        Status: accessKey.Status,
+        UserName: accessKey.UserName,
+    };
+
+    keys.push(newKey);
 
     callback(null, {
-        AccessKey: newKey,
+        AccessKey: accessKey,
     });
 }
 
 function mockDeleteAccessKey(params: DeleteAccessKeyRequest, callback: Callback) {
-    console.log("Mocking delete key...");
-    console.log(keys);
-    console.log(params.AccessKeyId);
+    console.log(`Keys before delete: ${JSON.stringify(keys)}`);
     keys = keys.filter((key) => key.AccessKeyId !== params.AccessKeyId);
-    console.log(keys);
+    console.log(`Keys after delete: ${JSON.stringify(keys)}`);
     callback(null, {});
 }
