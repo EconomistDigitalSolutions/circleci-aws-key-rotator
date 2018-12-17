@@ -21,7 +21,7 @@ jobs:
           command: 'sudo npm install'
       - run:
           name: Run unit tests
-          command: 'npm test -- --ci --reporters=jest-junit'
+          command: 'npm test -- --ci --reporters=jest-junit --runInBand'
           environment:
             JEST_JUNIT_OUTPUT: "test-results/jest/js-test-results.xml"
       - store_test_results:
