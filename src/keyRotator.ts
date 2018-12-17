@@ -2,7 +2,7 @@ import { IAM } from "aws-sdk";
 import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, ListAccessKeysRequest } from "aws-sdk/clients/iam";
 import { ACTIVE, INACTIVE } from "./keyStatus";
 
-type NewKeyHandler = (key: AccessKey) => Promise<void>;
+export type NewKeyHandler = (key: AccessKey) => Promise<void>;
 
 export class KeyRotator {
 
@@ -16,6 +16,7 @@ export class KeyRotator {
      */
     constructor(iam: IAM, newKeyHandler: NewKeyHandler) {
         this.iam = iam;
+        this.handleNewKey = newKeyHandler;
     }
 
     /**
@@ -25,15 +26,15 @@ export class KeyRotator {
     public rotateKeys(user: string) {
         return this.getExistingKeys(user)
             .then(this.deleteInactiveKeys)
-            .then((keys) => {
+            .then((keys) =>
                 this.createNewKey(user)
-                    .then(this.handleNewKey);
-                return keys;
-            })
+                    .then(this.handleNewKey)
+                    .then(() => keys))
             .then(this.deactivateOldKeys)
             .then(() => { return; })
             .catch((err) => {
-                this.handlerError(err);
+                console.error(err);
+                throw err;
             });
     }
 
@@ -52,9 +53,6 @@ export class KeyRotator {
             .then((data) => {
                 console.log(`Retrieved the following keys for User ${user}: ${JSON.stringify(data.AccessKeyMetadata)}`);
                 return Promise.resolve(data.AccessKeyMetadata);
-            })
-            .catch((err) => {
-                return Promise.resolve([]);
             });
     }
 
@@ -66,8 +64,17 @@ export class KeyRotator {
         console.log('Deleting inactive keys');
         const inactiveKeys = keys.filter((key) => key.Status === INACTIVE && key.AccessKeyId);
         console.log(`The following keys are inactive and will be deleted: ${JSON.stringify(inactiveKeys)}`);
-        inactiveKeys.forEach(this.deleteKey);
-        return Promise.resolve(keys);
+
+        const promises: Array<Promise<any>> = [];
+        inactiveKeys.forEach((key) => {
+            const p = this.deleteKey(key);
+            promises.push(p);
+        });
+
+        return Promise.all(promises)
+            .then((data) => {
+                return keys;
+            });
     }
 
     /**
@@ -96,8 +103,17 @@ export class KeyRotator {
         console.log(`Deactivating old keys from: ${JSON.stringify(keys)}`);
         const activeKeys = keys.filter((key) => key.Status === ACTIVE && key.AccessKeyId);
         console.log(`The following keys will be deactivated: ${JSON.stringify(activeKeys)}`);
-        activeKeys.forEach(this.deactivateKey);
-        return Promise.resolve(keys);
+
+        const promises: Array<Promise<any>> = [];
+        activeKeys.forEach((key) => {
+            const p = this.deactivateKey(key);
+            promises.push(p);
+        });
+
+        return Promise.all(promises)
+            .then((data) => {
+                return keys;
+            });
     }
 
     /**
@@ -138,16 +154,16 @@ export class KeyRotator {
             });
     }
 
-    /**
-     * Checks whether the provided error is truthy and, if it is, logs it
-     * to the console and throws it
-     * @param error the error returned from a callback
-     * @throws if the provided error is truthy
-     */
-    private handlerError(error: Error) {
-        if (error) {
-            console.error(error);
-            throw error;
-        }
-    }
+    // /**
+    //  * Checks whether the provided error is truthy and, if it is, logs it
+    //  * to the console and throws it
+    //  * @param error the error returned from a callback
+    //  * @throws if the provided error is truthy
+    //  */
+    // private handlerError(error: Error) {
+    //     if (error) {
+    //         console.error(error);
+    //         throw error;
+    //     }
+    // }
 }
