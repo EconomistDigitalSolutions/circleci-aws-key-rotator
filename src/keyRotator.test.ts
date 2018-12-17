@@ -156,27 +156,29 @@ test('2 inactive keys', (done) => {
 
 // TODO: Think about what the correct handling for this scenario is. Need to assert which key has a
 // stronger claim, propagate it to existing users of the other key and then rotate as normal.
-// test('2 active keys', (done) => {
-//     const firstExistingKey = createKey(ACTIVE);
-//     const secondExistingKey = createKey(ACTIVE);
+test('2 active keys', (done) => {
+    const firstExistingKey = createKey(ACTIVE);
+    const secondExistingKey = createKey(ACTIVE);
 
-//     keys.push(firstExistingKey);
-//     keys.push(secondExistingKey);
+    keys.push(firstExistingKey);
+    keys.push(secondExistingKey);
 
-//     keyRotator.rotateKeys(user)
-//         .then((newKeys) => {
-//             if (!newKeys) {
-//                 fail();
-//                 done();
-//                 return;
-//             }
-//             expect(newKeys.length).toBe(1);
-//             expect(keys.indexOf(firstExistingKey)).toBe(-1);
-//             expect(keys.indexOf(secondExistingKey)).toBe(-1);
-//             // expect new key to be active
-//             done();
-//         });
-// });
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to still be 2 keys
+            expect(keys.length).toBe(2);
+
+            // Expect both existing keys to still be present
+            expect(keys.indexOf(firstExistingKey)).toBeGreaterThanOrEqual(0);
+            expect(keys.indexOf(secondExistingKey)).toBeGreaterThanOrEqual(0);
+
+            done();
+        });
+});
 
 test('error getting existing keys', (done) => {
     AWS.restore('IAM', 'listAccessKeys');
@@ -243,8 +245,21 @@ test('error creating new key', (done) => {
         });
 });
 
-test('error handling new key', (done) =>{
-    done();
+test('error handling new key', (done) => {
+    keyHandler = (key: AccessKey) => Promise.reject("Could not handle new key");
+    keyRotator = new KeyRotator(iam, keyHandler);
+
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
+
+            done();
+        });
 });
 
 test('error deactivating key', (done) => {
@@ -301,7 +316,7 @@ function mockUpdateAccessKey(params: UpdateAccessKeyRequest, callback: Callback)
 
 function mockCreateAccessKey(params: CreateAccessKeyRequest, callback: Callback) {
     if (keys.length >= 2) {
-        callback(new Error("Maximum 2 keys."), {});
+        callback("Maximum 2 keys.", {});
         return;
     }
 
