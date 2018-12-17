@@ -21,7 +21,8 @@ beforeAll(() => {
     AWS.mock('IAM', 'deleteAccessKey', mockDeleteAccessKey);
 
     iam = new IAM();
-    keyRotator = new KeyRotator(iam, '');
+    const keyHandler = (key: AccessKey) => Promise.resolve();
+    keyRotator = new KeyRotator(iam, keyHandler);
 });
 
 beforeEach(() => {
@@ -167,6 +168,22 @@ test('2 inactive keys', (done) => {
 //         });
 // });
 
+// test('error getting existing keys', (done) => {
+//     AWS.mock('IAM', 'updateAccessKey', mockErrorCallback);
+
+//     iam = new IAM();
+//     keyRotator = new KeyRotator(iam, '');
+
+//     keyRotator.rotateKeys(user)
+//         .then(() => {
+//             fail();
+//             done();
+//         })
+//         .catch((err) => {
+//             done();
+//         });
+// });
+
 // HELPERS
 function createKey(status: string): AccessKeyMetadata {
     return {
@@ -219,4 +236,8 @@ function mockDeleteAccessKey(params: DeleteAccessKeyRequest, callback: Callback)
     keys = keys.filter((key) => key.AccessKeyId !== params.AccessKeyId);
     console.log(`Keys after delete: ${JSON.stringify(keys)}`);
     callback(null, {});
+}
+
+function mockErrorCallback(params: any, callback: Callback) {
+    callback(new Error("Test Error"));
 }
