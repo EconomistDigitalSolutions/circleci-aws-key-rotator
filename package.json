@@ -18,11 +18,13 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.15",
+    "@types/fetch-mock": "^6.0.4",
     "@types/jest": "^23.3.10",
     "@types/node": "^10.12.14",
     "@types/promise.prototype.finally": "^2.0.2",
     "@types/uuid": "^3.4.4",
     "aws-sdk-mock": "^4.3.0",
+    "fetch-mock": "^7.2.5",
     "jest": "^23.6.0",
     "jest-junit": "^5.2.0",
     "serverless": "^1.35.0",
