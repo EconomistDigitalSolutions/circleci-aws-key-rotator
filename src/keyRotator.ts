@@ -146,7 +146,7 @@ export class KeyRotator {
      */
     private handlerError(error: Error) {
         if (error) {
-            console.log(error);
+            console.error(error);
             throw error;
         }
     }
