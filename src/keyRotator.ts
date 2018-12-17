@@ -2,19 +2,20 @@ import { IAM } from "aws-sdk";
 import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, ListAccessKeysRequest } from "aws-sdk/clients/iam";
 import { ACTIVE, INACTIVE } from "./keyStatus";
 
+type NewKeyHandler = (key: AccessKey) => Promise<void>;
+
 export class KeyRotator {
 
     private iam: IAM;
-    private url: string;
+    private handleNewKey: NewKeyHandler;
 
     /**
      * Construct a new KeyRotator
      * @param iam the IAM Service Provider
      * @param url API URL for updating the key(s)
      */
-    constructor(iam: IAM, url: string) {
+    constructor(iam: IAM, newKeyHandler: NewKeyHandler) {
         this.iam = iam;
-        this.url = url;
     }
 
     /**
@@ -25,8 +26,8 @@ export class KeyRotator {
         return this.getExistingKeys(user)
             .then(this.deleteInactiveKeys)
             .then((keys) => {
-                this.createNewKey(user);
-                // .then(this.sendNewKey);
+                this.createNewKey(user)
+                    .then(this.handleNewKey);
                 return keys;
             })
             .then(this.deactivateOldKeys)
@@ -134,31 +135,6 @@ export class KeyRotator {
                 const newKey = data.AccessKey;
                 console.log(`Created a new Access Key: ${JSON.stringify(newKey)}`);
                 return Promise.resolve(newKey);
-            });
-    }
-
-    private sendNewKey = (key: AccessKey): Promise<Response> => {
-        const request = {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name: key.AccessKeyId,
-                value: key.SecretAccessKey,
-            }),
-        };
-        console.log(`Sending request to CircleCI: ${JSON.stringify(request)}`);
-
-        return fetch(this.url, request)
-            .then((resp) => {
-                console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`);
-                return Promise.resolve(resp);
-            })
-            .catch((err) => {
-                return Promise.reject(err);
-                // TODO: What to do here? Retry? Can't rollback, discard key?
-                // this.handlerError(err);
             });
     }
 
