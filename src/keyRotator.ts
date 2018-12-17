@@ -33,8 +33,8 @@ export class KeyRotator {
             .then(this.deactivateOldKeys)
             .then(() => { return; })
             .catch((err) => {
-                console.error(err);
-                throw err;
+                console.error(`There was an error whilst rotating the Access Keys: ${JSON.stringify(err)}`);
+                return Promise.reject(err);
             });
     }
 
