@@ -16,8 +16,11 @@ jobs:
       - image: circleci/node:chakracore-browsers-legacy
     steps:
       - checkout
+      - run: 
+          name: Install dependencies
+          command: 'sudo npm install'
       - run:
-          name: Unit test
+          name: Run unit tests
           command: 'npm test'
       - store_test_results:
           path: ./coverage
