@@ -3,7 +3,7 @@ import { IAM } from "aws-sdk";
 import * as AWS from "aws-sdk-mock";
 import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, DeleteAccessKeyRequest, ListAccessKeysRequest, UpdateAccessKeyRequest } from "aws-sdk/clients/iam";
 import * as uuidv4 from "uuid/v4";
-import { KeyRotator } from "./keyRotator";
+import { KeyRotator, NewKeyHandler } from "./keyRotator";
 import { ACTIVE, INACTIVE } from "./keyStatus";
 
 const user = 'TestUser';
@@ -12,25 +12,30 @@ let iam: IAM;
 let keys: AccessKeyMetadata[];
 let newKey: AccessKeyMetadata;
 let keyRotator: KeyRotator;
+let keyHandler: NewKeyHandler;
 
 // SETUP
-beforeAll(() => {
+beforeEach(() => {
+    // Clear keys
+    keys = [];
+    newKey = {};
+
+    // Initialise mocks
     AWS.mock('IAM', 'listAccessKeys', mockListAccessKeys);
     AWS.mock('IAM', 'updateAccessKey', mockUpdateAccessKey);
     AWS.mock('IAM', 'createAccessKey', mockCreateAccessKey);
     AWS.mock('IAM', 'deleteAccessKey', mockDeleteAccessKey);
 
+    // Initialise dependencies
     iam = new IAM();
-    const keyHandler = (key: AccessKey) => Promise.resolve();
+    keyHandler = (key: AccessKey) => Promise.resolve();
+
+    // Initialise test object
     keyRotator = new KeyRotator(iam, keyHandler);
 });
 
-beforeEach(() => {
-    keys = [];
-});
-
 // TEAR DOWN
-afterAll(() => {
+afterEach(() => {
     AWS.restore('IAM');
 });
 
@@ -44,6 +49,7 @@ test('no existing keys', (done) => {
             expect(keys.length).toBe(1);
             expect(newKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
+
             done();
         });
 });
@@ -66,6 +72,7 @@ test('1 active key', (done) => {
             // New key should be present and active
             expect(newKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
+
             done();
         });
 });
@@ -87,6 +94,7 @@ test('1 inactive key', (done) => {
             // Expect new key to be present and active
             expect(newKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
+
             done();
         });
 });
@@ -108,13 +116,14 @@ test('1 active and 1 inactive key', (done) => {
             // Expect existing inactive key to have been removed
             expect(keys.indexOf(existingInactiveKey)).toBe(-1);
 
-            // Expect existing active key to be present and inactive
+            // Expect existing active key to be present but inactive
             expect(existingActiveKey.Status).toBe(INACTIVE);
             expect(keys.indexOf(existingActiveKey)).toBeGreaterThanOrEqual(0);
 
             // Expect new key to be present and active
             expect(newKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
+
             done();
         });
 });
@@ -140,6 +149,7 @@ test('2 inactive keys', (done) => {
             // Expect new key to be present and active
             expect(newKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
+
             done();
         });
 });
@@ -168,21 +178,103 @@ test('2 inactive keys', (done) => {
 //         });
 // });
 
-// test('error getting existing keys', (done) => {
-//     AWS.mock('IAM', 'updateAccessKey', mockErrorCallback);
+test('error getting existing keys', (done) => {
+    AWS.restore('IAM', 'listAccessKeys');
+    AWS.mock('IAM', 'listAccessKeys', mockErrorCallback);
 
-//     iam = new IAM();
-//     keyRotator = new KeyRotator(iam, '');
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be no keys
+            expect(keys.length).toBe(0);
 
-//     keyRotator.rotateKeys(user)
-//         .then(() => {
-//             fail();
-//             done();
-//         })
-//         .catch((err) => {
-//             done();
-//         });
-// });
+            done();
+        });
+});
+
+test('error deleting a key', (done) => {
+    AWS.restore('IAM', 'deleteAccessKey');
+    AWS.mock('IAM', 'deleteAccessKey', mockErrorCallback);
+
+    const existingKey = createKey(INACTIVE);
+    keys.push(existingKey);
+
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
+
+            // Expect existing key to still be present and inactive
+            expect(existingKey.Status).toBe(INACTIVE);
+            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
+
+            done();
+        });
+});
+
+test('error creating new key', (done) => {
+    AWS.restore('IAM', 'createAccessKey');
+    AWS.mock('IAM', 'createAccessKey', mockErrorCallback);
+
+    const existingKey = createKey(ACTIVE);
+    keys.push(existingKey);
+
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
+
+            // Expect existing key to still be present and active
+            expect(existingKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
+
+            done();
+        });
+});
+
+test('error handling new key', (done) =>{
+    done();
+});
+
+test('error deactivating key', (done) => {
+
+    AWS.restore('IAM', 'updateAccessKey');
+    AWS.mock('IAM', 'updateAccessKey', mockErrorCallback);
+
+    const existingKey = createKey(ACTIVE);
+    keys.push(existingKey);
+
+    keyRotator.rotateKeys(user)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be 2 keys
+            expect(keys.length).toBe(2);
+
+            // Expect existing key to still be present and active
+            expect(existingKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
+
+            // Expect new key to be present and active
+            expect(newKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
+
+            done();
+        });
+});
 
 // HELPERS
 function createKey(status: string): AccessKeyMetadata {
@@ -194,12 +286,14 @@ function createKey(status: string): AccessKeyMetadata {
 }
 
 function mockListAccessKeys(params: ListAccessKeysRequest, callback: Callback) {
+    console.log("Calling Mocked ListAccessKeys function");
     callback(null, {
         AccessKeyMetadata: keys.slice(),
     });
 }
 
 function mockUpdateAccessKey(params: UpdateAccessKeyRequest, callback: Callback) {
+    console.log("Calling Mocked UpdateAccessKey function");
     keys.filter((key) => key.AccessKeyId === params.AccessKeyId)
         .forEach((key) => key.Status = params.Status);
     callback(null, {});
@@ -239,5 +333,6 @@ function mockDeleteAccessKey(params: DeleteAccessKeyRequest, callback: Callback)
 }
 
 function mockErrorCallback(params: any, callback: Callback) {
-    callback(new Error("Test Error"));
+    console.log("Called Error Mock");
+    callback("Test Error");
 }
