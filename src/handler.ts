@@ -1,5 +1,6 @@
 import { Callback, Context, ScheduledEvent } from "aws-lambda";
 import { IAM } from "aws-sdk";
+import { sendNewKey } from "./key_handlers/circleci";
 import { KeyRotator } from "./keyRotator";
 
 export function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
@@ -23,7 +24,7 @@ export function rotateKeys(event: ScheduledEvent, context: Context, callback: Ca
     }
 
     const iam = new IAM();
-    const keyRotator = new KeyRotator(iam, url);
+    const keyRotator = new KeyRotator(iam, sendNewKey);
 
     return keyRotator.rotateKeys(user)
         .then(() => respond(200, `Successfully rotated Access Keys for ${user}`))
