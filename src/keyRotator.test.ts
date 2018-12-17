@@ -178,7 +178,7 @@ function createKey(status: string): AccessKeyMetadata {
 
 function mockListAccessKeys(params: ListAccessKeysRequest, callback: Callback) {
     callback(null, {
-        AccessKeyMetadata: keys,
+        AccessKeyMetadata: keys.slice(),
     });
 }
 
