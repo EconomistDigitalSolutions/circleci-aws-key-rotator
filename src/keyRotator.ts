@@ -12,7 +12,7 @@ export class KeyRotator {
     /**
      * Construct a new KeyRotator
      * @param iam the IAM Service Provider
-     * @param url API URL for updating the key(s)
+     * @param newKeyHandler the callback invoked on creation of a new key. Takes the new key as a parameter
      */
     constructor(iam: IAM, newKeyHandler: NewKeyHandler) {
         this.iam = iam;
@@ -31,7 +31,7 @@ export class KeyRotator {
                     .then(this.handleNewKey)
                     .then(() => keys))
             .then(this.deactivateOldKeys)
-            .then(() => { return; })
+            .then(() => Promise.resolve())
             .catch((err) => {
                 console.error(`There was an error whilst rotating the Access Keys: ${JSON.stringify(err)}`);
                 return Promise.reject(err);
@@ -72,9 +72,7 @@ export class KeyRotator {
         });
 
         return Promise.all(promises)
-            .then((data) => {
-                return keys;
-            });
+            .then((data) => keys);
     }
 
     /**
@@ -111,9 +109,7 @@ export class KeyRotator {
         });
 
         return Promise.all(promises)
-            .then((data) => {
-                return keys;
-            });
+            .then((data) => keys);
     }
 
     /**
@@ -137,6 +133,7 @@ export class KeyRotator {
 
     /**
      * Creates a new Access Key and updates the relevant CircleCI environment variables.
+     * @param user the IAM User to create a new Access Key for
      */
     private createNewKey = (user: string): Promise<AccessKey> => {
         console.log(`Creating a new Access Key for User: ${user}`);
@@ -153,17 +150,4 @@ export class KeyRotator {
                 return Promise.resolve(newKey);
             });
     }
-
-    // /**
-    //  * Checks whether the provided error is truthy and, if it is, logs it
-    //  * to the console and throws it
-    //  * @param error the error returned from a callback
-    //  * @throws if the provided error is truthy
-    //  */
-    // private handlerError(error: Error) {
-    //     if (error) {
-    //         console.error(error);
-    //         throw error;
-    //     }
-    // }
 }
