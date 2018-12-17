@@ -21,9 +21,13 @@ jobs:
           command: 'sudo npm install'
       - run:
           name: Run unit tests
-          command: 'npm test'
+          command: 'npm test -- --ci --reporters=jest-junit'
+          environment:
+            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
-          path: ./coverage
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
 
 workflows:
   version: 2
