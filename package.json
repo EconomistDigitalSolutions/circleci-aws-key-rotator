@@ -24,6 +24,7 @@
     "@types/uuid": "^3.4.4",
     "aws-sdk-mock": "^4.3.0",
     "jest": "^23.6.0",
+    "jest-junit": "^5.2.0",
     "serverless": "^1.35.0",
     "serverless-offline": "^3.31.3",
     "serverless-plugin-typescript": "^1.1.5",
@@ -50,6 +51,10 @@
     "collectCoverage": true,
     "collectCoverageFrom": [
       "**/src/**"
+    ],
+    "reporters": [
+      "default",
+      "jest-junit"
     ]
   }
 }
