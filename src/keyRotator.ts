@@ -28,10 +28,20 @@ export class KeyRotator {
             .then((keys) =>
                 this.createNewKey(user)
                     .then(this.handleNewKey)
-                    .then(() => keys))
+                    .then(() => keys)
+                    .catch((err) => {
+                        // Try to self-heal by removing any inactive keys but still throw an error
+                        // as we haven't created/handled the new key correctly
+                        this.deleteInactiveKeys(keys);
+                        return Promise.reject(err);
+                    }))
             .then(this.deactivateOldKeys)
             .then(this.deleteInactiveKeys)
-            .then(() => Promise.resolve());
+            .then(() => Promise.resolve())
+            .catch((err) => {
+                console.error(`There was an error during key rotation: ${JSON.stringify(err)}`);
+                return Promise.reject(err);
+            });
     }
 
     /**
