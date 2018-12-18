@@ -25,17 +25,13 @@ export class KeyRotator {
      */
     public rotateKeys(user: string) {
         return this.getExistingKeys(user)
-            .then(this.deleteInactiveKeys)
             .then((keys) =>
                 this.createNewKey(user)
                     .then(this.handleNewKey)
                     .then(() => keys))
             .then(this.deactivateOldKeys)
-            .then(() => Promise.resolve())
-            .catch((err) => {
-                console.error(`There was an error whilst rotating the Access Keys: ${JSON.stringify(err)}`);
-                return Promise.reject(err);
-            });
+            .then(this.deleteInactiveKeys)
+            .then(() => Promise.resolve());
     }
 
     /**
