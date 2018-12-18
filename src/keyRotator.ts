@@ -95,7 +95,7 @@ export class KeyRotator {
             .promise()
             .then((data) => {
                 console.log(`Deleted Access Key: ${params.AccessKeyId}`);
-                Promise.resolve(data);
+                return Promise.resolve(data);
             });
     }
 
