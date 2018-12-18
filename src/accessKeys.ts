@@ -1,0 +1,2 @@
+export const ACCESS_KEY_ID = 'AWS_ACCESS_KEY_ID';
+export const SECRET_ACCESS_KEY = 'AWS_SECRET_ACCESS_KEY';
