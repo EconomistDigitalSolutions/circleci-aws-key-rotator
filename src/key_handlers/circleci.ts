@@ -1,6 +1,10 @@
 import { AccessKey } from "aws-sdk/clients/iam";
 import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "../accessKeys";
 
+/**
+ * Sends the given Access Key to CircleCI in the form of environment variables.
+ * @param key the AWS Access Key
+ */
 export function sendKeyToCircleCI(key: AccessKey) {
     const url = `https://circleci.com/api/v1.1/project/
                     ${process.env.VCS_PROVIDER}/
@@ -8,24 +12,39 @@ export function sendKeyToCircleCI(key: AccessKey) {
                     ${process.env.PROJECT_NAME}/
                     envvar?circle-token=${process.env.API_TOKEN}`;
 
-    const keyIdRequest = makeRequest(ACCESS_KEY_ID, key.AccessKeyId);
-    console.log(`Sending request to CircleCI: ${JSON.stringify(keyIdRequest)}`);
+    const promises: Array<Promise<Response>> = [];
+    promises.push(send(url, ACCESS_KEY_ID, key.AccessKeyId));
+    promises.push(send(url, SECRET_ACCESS_KEY, key.SecretAccessKey));
 
-    const secretRequest = makeRequest(SECRET_ACCESS_KEY, key.SecretAccessKey);
-
-    return fetch(url, keyIdRequest)
-        .then((resp) => {
-            console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`);
+    return Promise.all(promises)
+        .then((data) => {
+            data.forEach((resp) => console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`));
             return Promise.resolve();
         })
         .catch((err) => {
-            // TODO: What to do here? Retry? Can't rollback, discard key?
             console.error(`There was an error sending the request to CircleCI: ${JSON.stringify(err)}`);
             return Promise.reject(err);
         });
 }
 
-function makeRequest(name: string, value: string) {
+/**
+ * Helper function to create the request object, log it to the console and send it
+ * @param url the URL to send the request to
+ * @param key the name of the environment variable to set
+ * @param value the value of the environment variable to set
+ */
+function send(url: string, key: string, value: string): Promise<Response> {
+    const request = makeRequest(key, value);
+    console.log(`Sending request to CircleCI: ${JSON.stringify(request)}`);
+    return fetch(url, request);
+}
+
+/**
+ * Helper function to create a request object
+ * @param key the name of the environment variable to set
+ * @param value the value of the environment variable to set
+ */
+function makeRequest(name: string, value: string): RequestInit {
     return {
         method: 'POST',
         headers: {
