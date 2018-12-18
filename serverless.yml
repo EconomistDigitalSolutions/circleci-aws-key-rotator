@@ -9,8 +9,9 @@ provider:
   environment:
     VCS_PROVIDER: ${opt:vcs, 'github'}
     VCS_USER: ${opt:vcsUser, 'EconomistDigitalSolutions'}
-    CIRCLECI_IAM_USER: ${opt:awsUser}
+    IAM_USER: ${opt:awsUser}
     PROJECT_NAME: ${opt:projectName}
+    API_TOKEN: ${opt:apiToken}
   iamRoleStatements:
     - Effect: Allow
       Action:
