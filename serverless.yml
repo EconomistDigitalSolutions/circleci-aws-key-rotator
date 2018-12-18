@@ -1,5 +1,5 @@
 service: 
-  name: circleci-key-rotator
+  name: ${opt:projectName}-circleci-key-rotator
 
 provider:
   name: aws
