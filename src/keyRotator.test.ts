@@ -22,7 +22,6 @@ beforeEach(() => {
 
     // Initialise mocks
     AWS.mock('IAM', 'listAccessKeys', mockListAccessKeys);
-    AWS.mock('IAM', 'updateAccessKey', mockUpdateAccessKey);
     AWS.mock('IAM', 'createAccessKey', mockCreateAccessKey);
     AWS.mock('IAM', 'deleteAccessKey', mockDeleteAccessKey);
 
@@ -252,35 +251,6 @@ test('error handling new key', (done) => {
         });
 });
 
-test('error deactivating key', (done) => {
-
-    AWS.restore('IAM', 'updateAccessKey');
-    AWS.mock('IAM', 'updateAccessKey', mockErrorCallback);
-
-    const existingKey = createKey(ACTIVE);
-    keys.push(existingKey);
-
-    keyRotator.rotateKeys(user)
-        .then(() => {
-            fail();
-            done();
-        })
-        .catch((err) => {
-            // Expect there to be 2 keys
-            expect(keys.length).toBe(2);
-
-            // Expect existing key to still be present and active
-            expect(existingKey.Status).toBe(ACTIVE);
-            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
-
-            // Expect new key to be present and active
-            expect(newKey.Status).toBe(ACTIVE);
-            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
-
-            done();
-        });
-});
-
 // HELPERS
 function createKey(status: string): AccessKeyMetadata {
     return {
@@ -294,12 +264,6 @@ function mockListAccessKeys(params: ListAccessKeysRequest, callback: Callback) {
     callback(null, {
         AccessKeyMetadata: keys.slice(),
     });
-}
-
-function mockUpdateAccessKey(params: UpdateAccessKeyRequest, callback: Callback) {
-    keys.filter((key) => key.AccessKeyId === params.AccessKeyId)
-        .forEach((key) => key.Status = params.Status);
-    callback(null, {});
 }
 
 function mockCreateAccessKey(params: CreateAccessKeyRequest, callback: Callback) {

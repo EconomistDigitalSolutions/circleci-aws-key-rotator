@@ -1,6 +1,6 @@
 import { IAM } from "aws-sdk";
-import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, ListAccessKeysRequest } from "aws-sdk/clients/iam";
-import { ACTIVE, INACTIVE } from "./keyStatus";
+import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, DeleteAccessKeyRequest, ListAccessKeysRequest } from "aws-sdk/clients/iam";
+import { INACTIVE } from "./keyStatus";
 
 /**
  * Type of the handler function that a newly created key will be passed to
@@ -31,16 +31,14 @@ export class KeyRotator {
             .then((keys) =>
                 this.createNewKey(user)
                     .then(this.handleNewKey)
-                    .then(() => keys)
+                    .then(() => this.deleteKeys(user, keys))
                     .catch((err) => {
                         // Try to self-heal by removing any inactive keys but still throw an error
                         // as we haven't created/handled the new key correctly
-                        this.deleteInactiveKeys(keys);
-                        return Promise.reject(err);
+                        console.log(`Attempting to delete inactive keys`);
+                        return this.deleteKeys(user, keys, (key) => key.Status === INACTIVE)
+                            .then(() => Promise.reject(err));
                     }))
-            .then(this.deactivateOldKeys)
-            .then(this.deleteInactiveKeys)
-            .then(() => Promise.resolve())
             .catch((err) => {
                 console.error(`There was an error during key rotation: ${JSON.stringify(err)}`);
                 return Promise.reject(err);
@@ -66,81 +64,6 @@ export class KeyRotator {
     }
 
     /**
-     * Deletes any inactive keys in the given list
-     * @param keys a list of IAM Access Keys
-     */
-    private deleteInactiveKeys = (keys: AccessKeyMetadata[]): Promise<AccessKeyMetadata[]> => {
-        console.log('Deleting inactive keys');
-        const inactiveKeys = keys.filter((key) => key.Status === INACTIVE && key.AccessKeyId);
-        console.log(`The following keys are inactive and will be deleted: ${JSON.stringify(inactiveKeys)}`);
-
-        const promises: Array<Promise<any>> = [];
-        inactiveKeys.forEach((key) => {
-            const p = this.deleteKey(key);
-            promises.push(p);
-        });
-
-        return Promise.all(promises)
-            .then((data) => keys);
-    }
-
-    /**
-     * Deletes a given key.
-     * @param key the key to delete
-     */
-    private deleteKey = (key: AccessKeyMetadata) => {
-        console.log(`Deleting Access Key: ${key.AccessKeyId}`);
-        const params = {
-            AccessKeyId: key.AccessKeyId!,
-        };
-
-        return this.iam.deleteAccessKey(params)
-            .promise()
-            .then((data) => {
-                console.log(`Deleted Access Key: ${params.AccessKeyId}`);
-                return Promise.resolve(data);
-            });
-    }
-
-    /**
-     * Deactivates any active keys in the given list
-     * @param keys a list of IAM Access Keys
-     */
-    private deactivateOldKeys = (keys: AccessKeyMetadata[]): Promise<AccessKeyMetadata[]> => {
-        console.log(`Deactivating old keys from: ${JSON.stringify(keys)}`);
-        const activeKeys = keys.filter((key) => key.Status === ACTIVE && key.AccessKeyId);
-        console.log(`The following keys will be deactivated: ${JSON.stringify(activeKeys)}`);
-
-        const promises: Array<Promise<any>> = [];
-        activeKeys.forEach((key) => {
-            const p = this.deactivateKey(key);
-            promises.push(p);
-        });
-
-        return Promise.all(promises)
-            .then((data) => keys);
-    }
-
-    /**
-     * Deactivates a given key by updating its Status to 'Inactive'.
-     * @param key the key to update
-     */
-    private deactivateKey = (key: AccessKeyMetadata) => {
-        console.log(`Deactivating Access Key: ${key.AccessKeyId}`);
-        const params = {
-            AccessKeyId: key.AccessKeyId!,
-            Status: INACTIVE,
-        };
-
-        return this.iam.updateAccessKey(params)
-            .promise()
-            .then((data) => {
-                console.log(`Deactivated Access Key: ${params.AccessKeyId}`);
-                return Promise.resolve(data);
-            });
-    }
-
-    /**
      * Creates a new Access Key and updates the relevant CircleCI environment variables.
      * @param user the IAM User to create a new Access Key for
      */
@@ -157,6 +80,53 @@ export class KeyRotator {
                 const newKey = data.AccessKey;
                 console.log(`Created a new Access Key: ${JSON.stringify(newKey)}`);
                 return Promise.resolve(newKey);
+            });
+    }
+
+    /**
+     * Deletes all keys in a given list for a given user which pass the given filter. If no filter is
+     * provided then deletes all the given keys.
+     * @param user the IAM User that the keys belong to
+     * @param keys the list of keys to delete keys from
+     * @param filter a function taking a single key and returning true if that key should be deleted and false
+     *                  otherwise
+     */
+    private deleteKeys = (user: string, keys: AccessKeyMetadata[], filter?: (key: AccessKeyMetadata) => boolean) => {
+        let keysToDelete = keys;
+
+        if (filter) {
+            keysToDelete = keys.filter((key) => filter(key));
+        }
+
+        console.log(`The following keys will be deleted: ${JSON.stringify(keysToDelete)}`);
+
+        const promises: Array<Promise<any>> = [];
+        keysToDelete.forEach((key) => {
+            const p = this.deleteKey(user, key);
+            promises.push(p);
+        });
+
+        return Promise.all(promises)
+            .then((data) => Promise.resolve());
+    }
+
+    /**
+     * Deletes a given key.
+     * @param user the IAM User that the keys belong to
+     * @param key the key to delete
+     */
+    private deleteKey = (user: string, key: AccessKeyMetadata) => {
+        console.log(`Deleting Access Key: ${key.AccessKeyId} for User ${user}`);
+        const params: DeleteAccessKeyRequest = {
+            AccessKeyId: key.AccessKeyId!,
+            UserName: user,
+        };
+
+        return this.iam.deleteAccessKey(params)
+            .promise()
+            .then((data) => {
+                console.log(`Deleted Access Key: ${params.AccessKeyId}`);
+                return Promise.resolve(data);
             });
     }
 }
