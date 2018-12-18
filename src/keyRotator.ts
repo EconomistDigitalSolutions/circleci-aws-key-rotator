@@ -2,6 +2,9 @@ import { IAM } from "aws-sdk";
 import { AccessKey, AccessKeyMetadata, CreateAccessKeyRequest, ListAccessKeysRequest } from "aws-sdk/clients/iam";
 import { ACTIVE, INACTIVE } from "./keyStatus";
 
+/**
+ * Type of the handler function that a newly created key will be passed to
+ */
 export type NewKeyHandler = (key: AccessKey) => Promise<void>;
 
 export class KeyRotator {
