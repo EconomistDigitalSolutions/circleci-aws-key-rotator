@@ -43,8 +43,6 @@ afterEach(() => {
 test('no existing keys', (done) => {
     keyRotator.rotateKeys(user)
         .then(() => {
-            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
-
             // Expect there to be a single key and it should be active
             expect(keys.length).toBe(1);
             expect(newKey.Status).toBe(ACTIVE);
@@ -60,14 +58,11 @@ test('1 active key', (done) => {
 
     keyRotator.rotateKeys(user)
         .then(() => {
-            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
 
-            // Expect there to be 2 keys
-            expect(keys.length).toBe(2);
-
-            // Existing key should be present but inactive
-            expect(existingKey.Status).toBe(INACTIVE);
-            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
+            // Existing key should be deleted
+            expect(keys.indexOf(existingKey)).toBe(-1);
 
             // New key should be present and active
             expect(newKey.Status).toBe(ACTIVE);
@@ -83,8 +78,6 @@ test('1 inactive key', (done) => {
 
     keyRotator.rotateKeys(user)
         .then(() => {
-            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
-
             // Expect there to be 1 key
             expect(keys.length).toBe(1);
 
@@ -108,21 +101,19 @@ test('1 active and 1 inactive key', (done) => {
 
     keyRotator.rotateKeys(user)
         .then(() => {
-            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
-
-            // Expect there to be 2 keys
-            expect(keys.length).toBe(2);
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be 1 key
+            expect(keys.length).toBe(1);
 
             // Expect existing inactive key to have been removed
             expect(keys.indexOf(existingInactiveKey)).toBe(-1);
 
-            // Expect existing active key to be present but inactive
-            expect(existingActiveKey.Status).toBe(INACTIVE);
+            // Expect existing active key to be present and still active
+            expect(existingActiveKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(existingActiveKey)).toBeGreaterThanOrEqual(0);
-
-            // Expect new key to be present and active
-            expect(newKey.Status).toBe(ACTIVE);
-            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
 
             done();
         });
@@ -137,25 +128,22 @@ test('2 inactive keys', (done) => {
 
     keyRotator.rotateKeys(user)
         .then(() => {
-            console.log(`Keys after rotation: ${JSON.stringify(keys)}`);
-
-            // Expect there to be 1 key
-            expect(keys.length).toBe(1);
+            fail();
+            done();
+        })
+        .catch((err) => {
+            // Expect there to be 2 keys
+            expect(keys.length).toBe(0);
 
             // Expect both existing keys to have been removed
             expect(keys.indexOf(firstExistingKey)).toBe(-1);
             expect(keys.indexOf(secondExistingKey)).toBe(-1);
 
-            // Expect new key to be present and active
-            expect(newKey.Status).toBe(ACTIVE);
-            expect(keys.indexOf(newKey)).toBeGreaterThanOrEqual(0);
-
             done();
+
         });
 });
 
-// TODO: Think about what the correct handling for this scenario is. Need to assert which key has a
-// stronger claim, propagate it to existing users of the other key and then rotate as normal.
 test('2 active keys', (done) => {
     const firstExistingKey = createKey(ACTIVE);
     const secondExistingKey = createKey(ACTIVE);
@@ -172,8 +160,10 @@ test('2 active keys', (done) => {
             // Expect there to still be 2 keys
             expect(keys.length).toBe(2);
 
-            // Expect both existing keys to still be present
+            // Expect both existing keys to still be present and still active
+            expect(firstExistingKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(firstExistingKey)).toBeGreaterThanOrEqual(0);
+            expect(secondExistingKey.Status).toBe(ACTIVE);
             expect(keys.indexOf(secondExistingKey)).toBeGreaterThanOrEqual(0);
 
             done();
@@ -210,8 +200,8 @@ test('error deleting a key', (done) => {
             done();
         })
         .catch((err) => {
-            // Expect there to be 1 key
-            expect(keys.length).toBe(1);
+            // Expect there to be 2 keys
+            expect(keys.length).toBe(2);
 
             // Expect existing key to still be present and inactive
             expect(existingKey.Status).toBe(INACTIVE);
@@ -301,14 +291,12 @@ function createKey(status: string): AccessKeyMetadata {
 }
 
 function mockListAccessKeys(params: ListAccessKeysRequest, callback: Callback) {
-    console.log("Calling Mocked ListAccessKeys function");
     callback(null, {
         AccessKeyMetadata: keys.slice(),
     });
 }
 
 function mockUpdateAccessKey(params: UpdateAccessKeyRequest, callback: Callback) {
-    console.log("Calling Mocked UpdateAccessKey function");
     keys.filter((key) => key.AccessKeyId === params.AccessKeyId)
         .forEach((key) => key.Status = params.Status);
     callback(null, {});
@@ -341,13 +329,10 @@ function mockCreateAccessKey(params: CreateAccessKeyRequest, callback: Callback)
 }
 
 function mockDeleteAccessKey(params: DeleteAccessKeyRequest, callback: Callback) {
-    console.log(`Keys before delete: ${JSON.stringify(keys)}`);
     keys = keys.filter((key) => key.AccessKeyId !== params.AccessKeyId);
-    console.log(`Keys after delete: ${JSON.stringify(keys)}`);
     callback(null, {});
 }
 
 function mockErrorCallback(params: any, callback: Callback) {
-    console.log("Called Error Mock");
     callback("Test Error");
 }
