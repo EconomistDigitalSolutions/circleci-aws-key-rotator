@@ -11,7 +11,7 @@ provider:
     VCS_USER: ${opt:vcsUser, 'EconomistDigitalSolutions'}
     IAM_USER: ${opt:awsUser}
     PROJECT_NAME: ${opt:projectName}
-    API_TOKEN: ${opt:apiToken}
+    API_TOKEN: ${opt:apiToken, ''}
   iamRoleStatements:
     - Effect: Allow
       Action:
