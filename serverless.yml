@@ -29,7 +29,7 @@ functions:
   rotate:
     handler: src/handler.rotateKeys
     events:
-      - schedule: cron(0 10 * * ? *)
+      - schedule: cron(0 4 * * ? *)
 
 plugins:
   - serverless-plugin-typescript
