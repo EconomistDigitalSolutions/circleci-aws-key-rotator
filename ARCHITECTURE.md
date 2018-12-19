@@ -9,9 +9,9 @@ The KeyRotator class handles the bulk of the key rotation functionality. It expo
 constructor(iam: IAM, newKeyHandler: NewKeyHandler)
 ```
 #### Params
-***iam -*** an instance of an [IAM](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/IAM.html) object from the aws-sdk library. 
+***iam -*** an instance of an [IAM](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/IAM.html) object from the aws-sdk library. Used to provide access to a users AWS Access Keys.
 
-***newKeyHandler -*** the function for handling the new key once it is created. See below for more details.
+***newKeyHandler -*** the function for handling the new key once it is created. If the handling is not successful then the KeyRotator will automatically delete the newly created key.
 
 ### rotateKeys
 ```typescript

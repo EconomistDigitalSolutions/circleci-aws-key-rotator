@@ -10,7 +10,7 @@ export type NewKeyHandler = (key: AccessKey) => Promise<void>;
 export class KeyRotator {
 
     private iam: IAM;
-    private handleNewKey: NewKeyHandler;
+    private newKeyHandler: NewKeyHandler;
 
     /**
      * Construct a new KeyRotator
@@ -19,7 +19,7 @@ export class KeyRotator {
      */
     constructor(iam: IAM, newKeyHandler: NewKeyHandler) {
         this.iam = iam;
-        this.handleNewKey = newKeyHandler;
+        this.newKeyHandler = newKeyHandler;
     }
 
     /**
@@ -30,7 +30,7 @@ export class KeyRotator {
         return this.getExistingKeys(user)
             .then((keys) =>
                 this.createNewKey(user)
-                    .then(this.handleNewKey)
+                    .then((key) => this.handleNewKey(user, key))
                     .then(() => this.deleteKeys(user, keys))
                     .catch((err) => {
                         // Try to self-heal by removing any inactive keys but still throw an error
@@ -81,6 +81,18 @@ export class KeyRotator {
                 console.log(`Created a new Access Key: ${JSON.stringify(newKey)}`);
                 return Promise.resolve(newKey);
             });
+    }
+
+    /**
+     * Handles the provided key using the custom NewKeyHandler and deletes it if
+     * the handler returns a rejected promise.
+     * @param user the IAM User that the key belongs to
+     * @param key the key to pass to the NewKeyHandler
+     */
+    private handleNewKey = (user: string, key: AccessKey) => {
+        return this.newKeyHandler(key)
+            .catch((err) => this.deleteKey(user, key)
+                .then(() => Promise.reject(err)));
     }
 
     /**
