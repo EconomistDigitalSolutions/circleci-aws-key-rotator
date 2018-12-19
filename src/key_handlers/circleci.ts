@@ -13,8 +13,8 @@ export function sendKeyToCircleCI(key: AccessKey) {
                     envvar?circle-token=${process.env.API_TOKEN}`;
 
     const promises: Array<Promise<Response>> = [];
-    promises.push(send(url, ACCESS_KEY_ID, key.AccessKeyId));
-    promises.push(send(url, SECRET_ACCESS_KEY, key.SecretAccessKey));
+    promises.push(send(url, process.env.ACCESS_KEY_NAME || ACCESS_KEY_ID, key.AccessKeyId));
+    promises.push(send(url, process.env.SECRET_KEY_NAME || SECRET_ACCESS_KEY, key.SecretAccessKey));
 
     return Promise.all(promises)
         .then((data) => {
