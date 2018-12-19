@@ -16,6 +16,6 @@
     "suppressImplicitAnyIndexErrors": true,
     "forceConsistentCasingInFileNames": true,
   },
-  "exclude": [ "node_modules", "build", "webpack", "coverage" ],
+  "exclude": [ "node_modules", "build", "webpack", "test-results" ],
   "types": [ "typePatches" ]
 }
