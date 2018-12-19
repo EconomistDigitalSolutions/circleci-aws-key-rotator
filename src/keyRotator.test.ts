@@ -235,6 +235,9 @@ test('error creating new key', (done) => {
 });
 
 test('error handling new key', (done) => {
+    const existingKey = createKey(ACTIVE);
+    keys.push(existingKey);
+
     keyHandler = (key: AccessKey) => Promise.reject("Could not handle new key");
     keyRotator = new KeyRotator(iam, keyHandler);
 
@@ -246,6 +249,10 @@ test('error handling new key', (done) => {
         .catch((err) => {
             // Expect there to be 1 key
             expect(keys.length).toBe(1);
+
+            // Expect existing key to still be present and active
+            expect(existingKey.Status).toBe(ACTIVE);
+            expect(keys.indexOf(existingKey)).toBeGreaterThanOrEqual(0);
 
             done();
         });
