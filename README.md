@@ -5,7 +5,8 @@
 AWS Lambda for rotating AWS Access keys used by CircleCI
 
 # Pre-Requisites
-
+1. An AWS IAM User set up to represent CircleCI.
+2. Node.js installed.
 
 # Usage
 1. Clone the repository
@@ -35,8 +36,11 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
         --projectName <value>
         [--region <value>] 
         [--vcs <value>] 
-        [--vcsUser <value>] 
+        [--vcsUser <value>]
+        [--accessKeyName <value>] 
+        [--secretKeyName <value>]
     ```
+This will deploy a Lambda to the specified AWS account
 
 ## Options
 **awsAccountId**
@@ -45,11 +49,11 @@ The AWS Account ID.
 
 **awsUser**
 
-The AWS IAM User that represents CircleCI.
+The AWS IAM User that represents CircleCI. This is the user whose key(s) will be rotated.
 
 **projectName**
 
-The name of the project.
+The name of the project. This should be the project that is using CircleCI for CI/CD.
 
 **region** 
 
@@ -69,13 +73,21 @@ The Version Control provider. Currently CircleCI supports either `github` or `bi
 
 The Version Control User that the project belongs to.
 
+**accessKeyName**
+
+*Optional; default = 'AWS_ACCESS_KEY_ID'*
+
+The name of the environment variable that will store the AWS Access Key ID.
+
+**secretKeyName**
+
+*Optional; default = 'AWS_SECRET_ACCESS_KEY'*
+
+The name of the environment variable that will store the AWS Secret Access Key.
+
 # Issues/Todo
-1. Append/preprend project name to Lambda name to allow multiple instances on the same AWS account for different projects
-2. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)
-3. Delay in delete propagation
-    - Delete call returns successfully but the key may not be removed immediately
-    - Prevents new key being created if there are already 2 keys
-    - ~~Create separate sweep step that runs on a set time prior to rotation to allow for delete to propagate?~~ Run delete after deactivation (i.e. as final step). No need to ever reactivate old keys, assume single key at beginning of rotation
-4. How to handle case of 2 active keys?
-    - Don't.
-    - Bad practice, if there are two active keys then something has gone wrong, manually intervene
+1. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)
+2. Improve "self-healing" when there are two keys present against the IAM User.
+    - Currently if one or more keys are inactive then they will be deleted which should enable the next run of the rotator to succeeed.
+    - Could add an extra step to retry the rotation after deleting inactive keys 
+    - No way to self-heal if there are 2 active keys -> bad practice, should be avoided
