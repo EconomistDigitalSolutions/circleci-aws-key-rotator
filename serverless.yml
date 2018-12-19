@@ -12,6 +12,8 @@ provider:
     IAM_USER: ${opt:awsUser}
     PROJECT_NAME: ${opt:projectName}
     API_TOKEN: ${opt:apiToken, ''}
+    ACCESS_KEY_NAME: ${opt:accessKeyName, ''}
+    SECRET_KEY_NAME: ${opt:secretKeyName, ''}
   iamRoleStatements:
     - Effect: Allow
       Action:
