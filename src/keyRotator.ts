@@ -91,8 +91,11 @@ export class KeyRotator {
      */
     private handleNewKey = (user: string, key: AccessKey) => {
         return this.newKeyHandler(key)
-            .catch((err) => this.deleteKey(user, key)
-                .then(() => Promise.reject(err)));
+            .catch((err) => {
+                console.log(`New Key Handler failed with error: ${JSON.stringify(err)}. New key will be deleted.`);
+                return this.deleteKey(user, key)
+                    .then(() => Promise.reject(err));
+            });
     }
 
     /**
