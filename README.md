@@ -7,6 +7,7 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
 # Pre-Requisites
 1. An AWS IAM User set up to represent CircleCI.
 2. Node.js installed.
+3. A CircleCI API token.
 
 # Usage
 1. Clone the repository
