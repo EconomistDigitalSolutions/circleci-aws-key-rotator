@@ -28,17 +28,7 @@ export class KeyRotator {
      */
     public rotateKeys(user: string) {
         return this.getExistingKeys(user)
-            .then((keys) =>
-                this.createNewKey(user)
-                    .then((key) => this.handleNewKey(user, key))
-                    .then(() => this.deleteKeys(user, keys))
-                    .catch((err) => {
-                        // Try to self-heal by removing any inactive keys but still throw an error
-                        // as we haven't created/handled the new key correctly
-                        console.log(`Attempting to delete inactive keys`);
-                        return this.deleteKeys(user, keys, (key) => key.Status === INACTIVE)
-                            .then(() => Promise.reject(err));
-                    }))
+            .then((keys) => this.performKeyRotation(user, keys))
             .catch((err) => {
                 console.error(`There was an error during key rotation: ${JSON.stringify(err)}`);
                 return Promise.reject(err);
@@ -60,6 +50,24 @@ export class KeyRotator {
             .then((data) => {
                 console.log(`Retrieved the following keys for User ${user}: ${JSON.stringify(data.AccessKeyMetadata)}`);
                 return Promise.resolve(data.AccessKeyMetadata);
+            });
+    }
+
+    /**
+     * Rotate the given Access Keys for the given IAM User.
+     * @param user the IAM User that the Access Keys belong to
+     * @param keys the Access Keys to rotate
+     */
+    private performKeyRotation = (user: string, keys: AccessKeyMetadata[]) => {
+        return this.createNewKey(user)
+            .then((key) => this.handleNewKey(user, key))
+            .then(() => this.deleteKeys(user, keys))
+            .catch((err) => {
+                // Try to self-heal by removing any inactive keys but still throw an error
+                // as we haven't created/handled the new key correctly
+                console.log(`Attempting to delete inactive keys`);
+                return this.deleteKeys(user, keys, (key) => key.Status === INACTIVE)
+                    .then(() => Promise.reject(err));
             });
     }
 
