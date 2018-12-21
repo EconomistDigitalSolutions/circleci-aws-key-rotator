@@ -1,7 +1,7 @@
+import { KeyRotator } from "@economist/aws-key-rotator";
 import { Callback, Context, ScheduledEvent } from "aws-lambda";
 import { IAM } from "aws-sdk";
-import { sendKeyToCircleCI } from "./key_handlers/circleci";
-import { KeyRotator } from "./keyRotator";
+import { sendKeyToCircleCI } from "./circleci";
 
 export function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
 
