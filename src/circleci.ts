@@ -1,5 +1,5 @@
 import { AccessKey } from "aws-sdk/clients/iam";
-import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "../accessKeys";
+import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "./accessKeys";
 
 /**
  * Sends the given Access Key to CircleCI in the form of environment variables.
