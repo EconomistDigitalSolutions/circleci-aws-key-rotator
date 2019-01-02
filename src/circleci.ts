@@ -20,8 +20,9 @@ export function sendKeyToCircleCI(key: AccessKey) {
         .then((data) => {
             data.forEach((resp) => console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`));
 
-            if (!data.every((resp) => resp.ok)) {
-                return Promise.reject();
+            const badResponses = data.filter((resp) => !resp.ok);
+            if (badResponses.length !== 0) {
+                return Promise.reject(`Received one or more bad responses: ${JSON.stringify(badResponses)}`);
             }
 
             return Promise.resolve();
