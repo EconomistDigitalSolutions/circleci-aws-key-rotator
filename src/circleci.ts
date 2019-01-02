@@ -1,5 +1,5 @@
 import { AccessKey } from "aws-sdk/clients/iam";
-import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "../accessKeys";
+import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "./accessKeys";
 
 /**
  * Sends the given Access Key to CircleCI in the form of environment variables.
@@ -19,6 +19,11 @@ export function sendKeyToCircleCI(key: AccessKey) {
     return Promise.all(promises)
         .then((data) => {
             data.forEach((resp) => console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`));
+
+            if (!data.every((resp) => resp.ok)) {
+                return Promise.reject();
+            }
+
             return Promise.resolve();
         })
         .catch((err) => {
