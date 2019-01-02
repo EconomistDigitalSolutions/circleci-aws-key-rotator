@@ -29,6 +29,20 @@ test('successfully sent request', (done) => {
         });
 });
 
+test('received bad response', (done) => {
+    fetchMock.post('*', Promise.resolve(400));
+
+    sendKeyToCircleCI(key)
+        .then(() => {
+            fail();
+            done();
+        })
+        .catch((err) => {
+            expect(fetchMock.called()).toBeTruthy();
+            done();
+        });
+});
+
 test('failed to send request', (done) => {
 
     fetchMock.post('*', Promise.reject('Test'));
