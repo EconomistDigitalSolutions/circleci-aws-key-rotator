@@ -1,6 +1,6 @@
 import { Callback, Context, ScheduledEvent } from "aws-lambda";
 import { IAM } from "aws-sdk";
-import { sendKeyToCircleCI } from "./key_handlers/circleci";
+import { sendKeyToCircleCI } from "./circleci";
 import { KeyRotator } from "./keyRotator";
 
 export function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
