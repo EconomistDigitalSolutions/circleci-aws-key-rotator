@@ -1,6 +1,7 @@
 # circleci-aws-key-rotator
 
 [![](https://img.shields.io/circleci/project/github/EconomistDigitalSolutions/circleci-aws-key-rotator/master.svg)](https://circleci.com/gh/EconomistDigitalSolutions/circleci-aws-key-rotator)
+[![codecov](https://codecov.io/gh/EconomistDigitalSolutions/circleci-aws-key-rotator/branch/master/graph/badge.svg)](https://codecov.io/gh/EconomistDigitalSolutions/circleci-aws-key-rotator)
 
 AWS Lambda for rotating AWS Access keys used by CircleCI
 
@@ -41,7 +42,7 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
         [--accessKeyName <value>] 
         [--secretKeyName <value>]
     ```
-This will deploy a Lambda to the specified AWS account
+This will deploy a Lambda to the specified AWS account which runs once per day at 04:00am.
 
 ## Options
 **awsAccountId**
