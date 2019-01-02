@@ -88,7 +88,3 @@ The name of the environment variable that will store the AWS Secret Access Key.
 
 # Issues/Todo
 1. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)
-2. Improve "self-healing" when there are two keys present against the IAM User.
-    - Currently if one or more keys are inactive then they will be deleted which should enable the next run of the rotator to succeeed.
-    - Could add an extra step to retry the rotation after deleting inactive keys 
-    - No way to self-heal if there are 2 active keys -> bad practice, should be avoided

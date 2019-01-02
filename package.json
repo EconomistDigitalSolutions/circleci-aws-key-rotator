@@ -14,6 +14,7 @@
   "author": "Dom Parfitt",
   "license": "Apache-2.0",
   "dependencies": {
+    "@economist/aws-key-rotator": "^1.0.1",
     "aws-sdk": "^2.374.0"
   },
   "devDependencies": {

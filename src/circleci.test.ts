@@ -1,12 +1,11 @@
 import { AccessKey } from "aws-sdk/clients/iam";
 import fetchMock = require("fetch-mock");
 import { sendKeyToCircleCI } from "./circleci";
-import { ACTIVE } from "./keyStatus";
 
 const key: AccessKey = {
     AccessKeyId: 'AccessKeyId',
     SecretAccessKey: 'Secret',
-    Status: ACTIVE,
+    Status: 'Active',
     UserName: 'Test User',
 };
 
