@@ -21,9 +21,9 @@
   },
   "exclude": [
     "node_modules",
-    "build",
+    ".build",
     "webpack",
-    "test-resuts",
+    "test-results",
     "**/*.test.ts"
   ],
   "types": [
