@@ -14,11 +14,19 @@ export function sendKeyToCircleCI(key: AccessKey) {
 
     return Promise.all(promises)
         .then((data) => {
-            data.forEach((resp) => console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`));
+            // Sanitize the response to: a) remove any sensitive data (i.e. API Token) and b) remove any extraneous data that just bloats the logs
+            const responses = data.map((resp) => ({
+                ok: resp.ok,
+                status: resp.status,
+                statusText: resp.statusText,
+                headers: resp.headers,
+            }));
 
-            const badResponses = data.filter((resp) => !resp.ok);
+            responses.forEach((resp) => console.log(`Received response from CircleCI: ${JSON.stringify(resp)}`));
+
+            const badResponses = responses.filter((resp) => !resp.ok);
             if (badResponses.length !== 0) {
-                return Promise.reject(`Received one or more bad responses: ${JSON.stringify(badResponses)}`);
+                return Promise.reject(`Received one or more bad responses from CircleCI: ${JSON.stringify(badResponses)}`);
             }
 
             return Promise.resolve();
@@ -37,7 +45,7 @@ export function sendKeyToCircleCI(key: AccessKey) {
  */
 function send(url: string, key: string, value: string): Promise<Response> {
     const request = makeRequest(key, value);
-    console.log(`Sending request to CircleCI: ${JSON.stringify(request)}`);
+    console.log(`Sending request to CircleCI to set/update env var: ${key}`);
     return fetch(url, request);
 }
 
