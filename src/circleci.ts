@@ -6,11 +6,7 @@ import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "./accessKeys";
  * @param key the AWS Access Key
  */
 export function sendKeyToCircleCI(key: AccessKey) {
-    const url = `https://circleci.com/api/v1.1/project/
-                    ${process.env.VCS_PROVIDER}/
-                    ${process.env.VCS_USER}/
-                    ${process.env.PROJECT_NAME}/
-                    envvar?circle-token=${process.env.API_TOKEN}`;
+    const url = `https://circleci.com/api/v1.1/project/${process.env.VCS_PROVIDER}/${process.env.VCS_USER}/${process.env.PROJECT_NAME}/envvar?circle-token=${process.env.API_TOKEN}`;
 
     const promises: Array<Promise<Response>> = [];
     promises.push(send(url, process.env.ACCESS_KEY_NAME || ACCESS_KEY_ID, key.AccessKeyId));
