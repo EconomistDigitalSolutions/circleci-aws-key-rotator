@@ -36,6 +36,7 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
         --awsAccountId <value> 
         --awsUser <value> 
         --projectName <value>
+        --apiToken <value>
         [--region <value>] 
         [--vcs <value>] 
         [--vcsUser <value>]
@@ -56,6 +57,10 @@ The AWS IAM User that represents CircleCI. This is the user whose key(s) will be
 **projectName**
 
 The name of the project. This should be the project that is using CircleCI for CI/CD.
+
+**apiToken**
+
+The API Token used to grant the Lambda access to the CircleCI environment variables for the project.
 
 **region** 
 
