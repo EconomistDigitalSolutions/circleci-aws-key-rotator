@@ -1,4 +1,5 @@
 import { AccessKey } from "aws-sdk/clients/iam";
+import fetch, { RequestInit, Response } from "node-fetch";
 import { ACCESS_KEY_ID, SECRET_ACCESS_KEY } from "./accessKeys";
 
 /**
