@@ -15,9 +15,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@economist/aws-key-rotator": "^1.0.3",
-    "@types/node-fetch": "^2.1.4",
+    "@types/isomorphic-fetch": "0.0.34",
     "aws-sdk": "^2.382.0",
-    "node-fetch": "^2.3.0"
+    "isomorphic-fetch": "^2.2.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.17",
@@ -27,6 +27,7 @@
     "@types/uuid": "^3.4.4",
     "fetch-mock": "^7.3.0",
     "jest": "^23.6.0",
+    "jest-fetch-mock": "^2.1.0",
     "jest-junit": "^5.2.0",
     "serverless": "^1.35.1",
     "serverless-offline": "^3.31.3",
