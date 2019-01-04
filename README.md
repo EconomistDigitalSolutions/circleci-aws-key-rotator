@@ -33,7 +33,8 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
 
     ```bash
     npm run deploy -- 
-        --awsAccountId <value> 
+        --awsAccountId <value>
+        --profile <value> 
         --awsUser <value> 
         --projectName <value>
         --apiToken <value>
@@ -49,6 +50,10 @@ This will deploy a Lambda to the specified AWS account which runs once per day a
 **awsAccountId**
 
 The AWS Account ID.
+
+**profile**
+
+The AWS profile to deploy on.
 
 **awsUser**
 
