@@ -13,7 +13,7 @@ provider:
     VCS_PROVIDER: ${opt:vcs, 'github'}
     VCS_USER: ${opt:vcsUser, 'EconomistDigitalSolutions'}
     PROJECT_NAME: ${opt:projectName}
-    API_TOKEN: ${opt:apiToken, ''}
+    API_TOKEN: ${opt:apiToken}
     # CircleCI Env Vars
     ACCESS_KEY_NAME: ${opt:accessKeyName, 'AWS_ACCESS_KEY_ID'}
     SECRET_KEY_NAME: ${opt:secretKeyName, 'AWS_SECRET_ACCESS_KEY'}
