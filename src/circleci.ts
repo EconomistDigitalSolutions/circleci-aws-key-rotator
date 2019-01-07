@@ -27,14 +27,13 @@ export function sendKeyToCircleCI(key: AccessKey) {
 
             const badResponses = responses.filter((resp) => !resp.ok);
             if (badResponses.length !== 0) {
-                return Promise.reject(`Received one or more bad responses from CircleCI: ${JSON.stringify(badResponses)}`);
+                throw new Error(`Received one or more bad responses from CircleCI: ${JSON.stringify(badResponses)}`);
             }
 
-            return Promise.resolve();
         })
         .catch((err) => {
             console.error(`There was an error sending the request to CircleCI: ${JSON.stringify(err)}`);
-            return Promise.reject(err);
+            throw err;
         });
 }
 
