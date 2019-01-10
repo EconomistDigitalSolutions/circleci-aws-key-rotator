@@ -31,9 +31,11 @@ provider:
 functions:
   rotate:
     handler: src/handler.rotateKeys
+    description: Rotates the Access Keys for ${opt:awsUser}
     events:
       - schedule: cron(0 4 * * ? *)
 
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
+  - serverless-plugin-optimize
