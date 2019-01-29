@@ -69,7 +69,7 @@ The API Token used to grant the Lambda access to the CircleCI environment variab
 
 **region** 
 
-*Optional; default = 'eu-west-2'*
+*Optional; default = 'us-east-1'*
 
 The AWS Region to deploy the Lambda on.
 
