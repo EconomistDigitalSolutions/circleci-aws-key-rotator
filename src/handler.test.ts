@@ -1,13 +1,16 @@
 import { KeyRotator } from "@economist/aws-key-rotator";
 import { Context, ScheduledEvent } from "aws-lambda";
 import { rotateKeys } from "./handler";
+import { BATCH } from "./mode";
 
 jest.mock('@economist/aws-key-rotator');
 
-process.env.IAM_USER = 'TestUser';
+beforeEach(() => {
+    process.env.IAM_USER = 'TestUser';
+});
 
 test('successful rotation', (done) => {
-    KeyRotator.prototype.rotateKeys = jest.fn((iam, handler) => Promise.resolve());
+    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.resolve());
 
     rotateKeys(event, context, (err: string, result: any) => {
         if (err) {
@@ -21,7 +24,7 @@ test('successful rotation', (done) => {
 });
 
 test('failed rotation', (done) => {
-    KeyRotator.prototype.rotateKeys = jest.fn((iam, handler) => Promise.reject('Test error'));
+    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.reject('Test error'));
     rotateKeys(event, context, (err: string, result: any) => {
         if (!err) {
             fail();
@@ -34,6 +37,34 @@ test('failed rotation', (done) => {
 test('no user provided', (done) => {
 
     process.env.IAM_USER = '';
+    rotateKeys(event, context, (err: string, result: any) => {
+        if (!err) {
+            fail();
+        }
+        console.log(err);
+        done();
+    });
+});
+
+test('successful batch rotation', (done) => {
+    process.env.MODE = BATCH;
+    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.resolve());
+
+    rotateKeys(event, context, (err: string, result: any) => {
+        if (err) {
+            console.log(err);
+            fail();
+        }
+
+        console.log(result);
+        done();
+    });
+});
+
+test('failed batch rotation', (done) => {
+    process.env.MODE = BATCH;
+    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.reject('Test error'));
+
     rotateKeys(event, context, (err: string, result: any) => {
         if (!err) {
             fail();
