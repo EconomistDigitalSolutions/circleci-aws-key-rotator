@@ -1,25 +1,15 @@
 service: 
-  name: ${opt:projectName}-circleci-key-rotator
+  name: circleci-key-rotator
 
 provider:
   name: aws
   runtime: nodejs8.10
-  region: ${opt:region, 'eu-west-2'}
+  region: ${opt:region, 'us-east-1'}
   profile: ${opt:profile}
   memorySize: 128
   environment:
-    # Mode
-    MODE: ${opt:mode, ''}
-    # KeyRotator 
-    IAM_USER: ${opt:awsUser}
-    # CircleCI API
-    VCS_PROVIDER: ${opt:vcs, 'github'}
-    VCS_USER: ${opt:vcsUser, 'EconomistDigitalSolutions'}
-    PROJECT_NAME: ${opt:projectName}
-    API_TOKEN: ${opt:apiToken}
-    # CircleCI Env Vars
-    ACCESS_KEY_NAME: ${opt:accessKeyName, 'AWS_ACCESS_KEY_ID'}
-    SECRET_KEY_NAME: ${opt:secretKeyName, 'AWS_SECRET_ACCESS_KEY'}
+    REGION: ${opt:region, 'us-east-1'}
+    TABLE: CircleCiKeyRotation
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -28,14 +18,38 @@ provider:
         - iam:CreateAccessKey
         - iam:UpdateAccessKey
       Resource: 
-        - arn:aws:iam::${opt:awsAccountId}:user/${opt:awsUser}
+        - arn:aws:iam::*:user/*
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+      Resource:
+        - arn:aws:dynamodb:{opt:region, 'us-east-1'}:*:table/CircleCiKeyRotation
         
 functions:
   rotate:
     handler: src/handler.rotateKeys
-    description: Rotates the Access Keys for ${opt:awsUser}
+    description: Rotates the Access Keys for CircleCI
     events:
       - schedule: cron(0 4 * * ? *)
+
+resources:
+  Resources:
+      table:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          TableName: CircleCiKeyRotation
+          AttributeDefinitions:
+            - AttributeName: iamUser
+              AttributeType: S
+          KeySchema:
+            - AttributeName: iamUser
+              KeyType: HASH
+          ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
 
 plugins:
   - serverless-plugin-typescript
