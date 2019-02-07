@@ -4,7 +4,7 @@ import { IAM } from "aws-sdk";
 import { createCircleCIHandler } from "./circleci";
 import { getJobs, RotationJob } from "./jobs";
 
-export async function batchRotate(event: ScheduledEvent, context: Context, callback: Callback) {
+export async function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
     const jobs = await getJobs(process.env.REGION!, process.env.TABLE!);
     const iam = new IAM();
     const promises: Promise<void>[] = [];
