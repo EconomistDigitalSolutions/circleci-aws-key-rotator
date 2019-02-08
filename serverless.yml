@@ -25,6 +25,7 @@ provider:
         - dynamodb:GetRecords
         - dynamodb:GetShardIterator
         - dynamodb:ListStreams
+        - dynamodb:Scan
       Resource:
         - arn:aws:dynamodb:{opt:region, 'us-east-1'}:*:table/CircleCiKeyRotation
         
@@ -42,10 +43,10 @@ resources:
         Properties:
           TableName: CircleCiKeyRotation
           AttributeDefinitions:
-            - AttributeName: iamUser
+            - AttributeName: user
               AttributeType: S
           KeySchema:
-            - AttributeName: iamUser
+            - AttributeName: user
               KeyType: HASH
           ProvisionedThroughput:
               ReadCapacityUnits: 1
