@@ -10,7 +10,7 @@ export interface RotationJob {
     secretKeyName?: string;
 }
 
-export function isJob(arg: any): arg is RotationJob {
+function isJob(arg: any): arg is RotationJob {
     return arg.user !== undefined &&
         arg.vcsProvider !== undefined &&
         arg.vcsUser !== undefined &&
@@ -18,9 +18,8 @@ export function isJob(arg: any): arg is RotationJob {
         arg.apiToken !== undefined;
 }
 
-export async function getJobsFromS3(bucket: string): Promise<RotationJob[]> {
+export async function getJobsFromS3(s3: AWS.S3, bucket: string): Promise<RotationJob[]> {
     console.log(`Retrieving jobs from S3 Bucket: ${bucket}`);
-    const s3 = new AWS.S3();
 
     const listParams: AWS.S3.ListObjectsV2Request = {
         Bucket: bucket,
