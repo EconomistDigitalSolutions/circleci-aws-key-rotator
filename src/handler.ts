@@ -7,7 +7,7 @@ export async function rotateKeys(event: ScheduledEvent, context: Context, callba
     const jobs = await getJobs(process.env.REGION!, process.env.TABLE!);
     console.log(`Retrieved the following jobs: ${JSON.stringify(jobs)}`);
 
-    batchRotateKeys(new IAM(), jobs)
+    await batchRotateKeys(new IAM(), jobs)
         .then(() => callback(null, `Successfully completed key rotation.`))
         .catch((err) => callback(err));
 }
