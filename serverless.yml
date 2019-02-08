@@ -8,8 +8,7 @@ provider:
   profile: ${opt:profile}
   memorySize: 128
   environment:
-    REGION: ${opt:region, 'us-east-1'}
-    TABLE: CircleCiKeyRotation
+    BUCKET: ${opt:bucketName}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -21,13 +20,11 @@ provider:
         - arn:aws:iam::*:user/*
     - Effect: Allow
       Action:
-        - dynamodb:DescribeStream
-        - dynamodb:GetRecords
-        - dynamodb:GetShardIterator
-        - dynamodb:ListStreams
-        - dynamodb:Scan
+        - s3:GetObject
+        - s3:ListBucket
       Resource:
-        - arn:aws:dynamodb:{opt:region, 'us-east-1'}:*:table/CircleCiKeyRotation
+        - "arn:aws:s3:::${opt:bucketName}"
+        - "arn:aws:s3:::${opt:bucketName}/*"
         
 functions:
   rotate:
@@ -38,19 +35,10 @@ functions:
 
 resources:
   Resources:
-      table:
-        Type: AWS::DynamoDB::Table
-        Properties:
-          TableName: CircleCiKeyRotation
-          AttributeDefinitions:
-            - AttributeName: user
-              AttributeType: S
-          KeySchema:
-            - AttributeName: user
-              KeyType: HASH
-          ProvisionedThroughput:
-              ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
+    JobBucket:
+      Type: AWS::S3::Bucket
+      Properties: 
+        BucketName: ${opt:bucketName}
 
 plugins:
   - serverless-plugin-typescript

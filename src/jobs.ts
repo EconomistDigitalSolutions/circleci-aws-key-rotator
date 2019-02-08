@@ -18,73 +18,48 @@ export function isJob(arg: any): arg is RotationJob {
         arg.apiToken !== undefined;
 }
 
-export function getJobs(region: string, table: string): Promise<RotationJob[]> {
-    return getFromDynamo(region, table);
-}
-
-function getFromDynamo(region: string, table: string): Promise<RotationJob[]> {
-    console.log(`Retrieving jobs from: https://dynamodb.${region}.amazonaws.com/${table}`);
-
-    AWS.config.update({
-        endpoint: `https://dynamodb.${region}.amazonaws.com`,
-    }, true);
-    const docClient = new AWS.DynamoDB.DocumentClient();
-    const params: AWS.DynamoDB.DocumentClient.ScanInput = {
-        TableName: table,
-    };
-
-    return docClient.scan(params)
-        .promise()
-        .then((data) => {
-            if (!data.Items) {
-                console.error("No items found.");
-                return [];
-            }
-
-            return data.Items.filter(isJob);
-
-        })
-        .catch((err) => {
-            console.error(err);
-            return [];
-        });
-}
-
-function getFromS3(bucket: string): Promise<RotationJob[]> {
+export async function getJobsFromS3(bucket: string): Promise<RotationJob[]> {
+    console.log(`Retrieving jobs from S3 Bucket: ${bucket}`);
     const s3 = new AWS.S3();
 
     const listParams: AWS.S3.ListObjectsV2Request = {
         Bucket: bucket,
     };
-    return s3.listObjectsV2(listParams)
-        .promise()
-        .then((data) => {
-            if (!data.Contents) {
-                return [];
-            }
 
-            return data.Contents
-                .map((obj) => obj.Key)
-                .filter((keys) => keys !== undefined);
-        })
-        .then((keys) => {
-            const jobs: RotationJob[] = [];
-            for (const key of keys) {
-                if (!key) {
-                    continue;
-                }
-                getJobFromS3(bucket, key).then((job) => {
-                    if (isJob(job)) {
-                        jobs.push(job);
-                    }
-                });
-            }
-            return jobs;
-        });
+    const objects = await s3.listObjectsV2(listParams).promise();
+
+    if (!objects.Contents) {
+        console.log(`No jobs found in S3 Bucket.`);
+        return [];
+    }
+
+    const jobs: RotationJob[] = [];
+    const keys = objects.Contents.map((obj) => obj.Key);
+
+    console.log(`Retrieved the following keys from S3 Bucket ${bucket}: ${JSON.stringify(keys)}`);
+    for (const key of keys) {
+        if (!key) {
+            continue;
+        }
+
+        const job = await getJobFromS3(bucket, key);
+        console.log(`Retrieved: ${JSON.stringify(job)}`);
+
+        if (!isJob(job)) {
+            console.log(`Retrieved object is not a recognised job.`);
+            continue;
+        }
+
+        jobs.push(job);
+    }
+
+    console.log(`Retrieved the following jobs: ${JSON.stringify(jobs)}`);
+    return jobs;
 
 }
 
 function getJobFromS3(bucket: string, key: string) {
+    console.log(`Retrieving file ${key} from S3 Bucket: ${bucket}`);
     const s3 = new AWS.S3();
     const params: AWS.S3.GetObjectRequest = {
         Bucket: bucket,
