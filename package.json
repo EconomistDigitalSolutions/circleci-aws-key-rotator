@@ -25,6 +25,7 @@
     "@types/jest": "^23.3.12",
     "@types/node": "^10.12.18",
     "@types/uuid": "^3.4.4",
+    "aws-sdk-mock": "^4.3.0",
     "fetch-mock": "^7.3.0",
     "jest": "^23.6.0",
     "jest-fetch-mock": "^2.1.0",
