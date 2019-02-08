@@ -1,16 +1,12 @@
 import { KeyRotator } from "@economist/aws-key-rotator";
 import { Context, ScheduledEvent } from "aws-lambda";
 import { rotateKeys } from "./handler";
-import { BATCH } from "./mode";
+import { RotationJob } from "./jobs";
 
 jest.mock('@economist/aws-key-rotator');
 
-beforeEach(() => {
-    process.env.IAM_USER = 'TestUser';
-});
-
 test('successful rotation', (done) => {
-    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.resolve());
+    // BatchRotator.prototype.rotateKeys = jest.fn(() => Promise.resolve());
 
     rotateKeys(event, context, (err: string, result: any) => {
         if (err) {
@@ -24,47 +20,7 @@ test('successful rotation', (done) => {
 });
 
 test('failed rotation', (done) => {
-    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.reject('Test error'));
-    rotateKeys(event, context, (err: string, result: any) => {
-        if (!err) {
-            fail();
-        }
-        console.log(err);
-        done();
-    });
-});
-
-test('no user provided', (done) => {
-
-    process.env.IAM_USER = '';
-    rotateKeys(event, context, (err: string, result: any) => {
-        if (!err) {
-            fail();
-        }
-        console.log(err);
-        done();
-    });
-});
-
-test('successful batch rotation', (done) => {
-    process.env.MODE = BATCH;
-    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.resolve());
-
-    rotateKeys(event, context, (err: string, result: any) => {
-        if (err) {
-            console.log(err);
-            fail();
-        }
-
-        console.log(result);
-        done();
-    });
-});
-
-test('failed batch rotation', (done) => {
-    process.env.MODE = BATCH;
-    KeyRotator.prototype.rotateKeys = jest.fn((user) => Promise.reject('Test error'));
-
+    // BatchRotator.prototype.rotateKeys = jest.fn(() => Promise.reject('Test error'));
     rotateKeys(event, context, (err: string, result: any) => {
         if (!err) {
             fail();
@@ -98,4 +54,12 @@ const context: Context = {
     fail: (err) => { return; },
     getRemainingTimeInMillis: () => 0,
     succeed: () => { return; },
+};
+
+const job: RotationJob = {
+    user: 'TestUser',
+    vcsProvider: 'github',
+    vcsUser: 'EconomistDigitalSolutions',
+    project: 'TestProject',
+    apiToken: 'TestToken',
 };
