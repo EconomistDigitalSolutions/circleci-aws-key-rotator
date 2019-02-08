@@ -10,7 +10,7 @@ export interface RotationJob {
     secretKeyName?: string;
 }
 
-function isJob(arg: any): arg is RotationJob {
+export function isJob(arg: any): arg is RotationJob {
     return arg.user !== undefined &&
         arg.vcsProvider !== undefined &&
         arg.vcsUser !== undefined &&
@@ -23,6 +23,8 @@ export function getJobs(region: string, table: string): Promise<RotationJob[]> {
 }
 
 function getFromDynamo(region: string, table: string): Promise<RotationJob[]> {
+    console.log(`Retrieving jobs from: https://dynamodb.${region}.amazonaws.com/${table}`);
+
     AWS.config.update({
         endpoint: `https://dynamodb.${region}.amazonaws.com`,
     }, true);
@@ -35,6 +37,7 @@ function getFromDynamo(region: string, table: string): Promise<RotationJob[]> {
         .promise()
         .then((data) => {
             if (!data.Items) {
+                console.error("No items found.");
                 return [];
             }
 
