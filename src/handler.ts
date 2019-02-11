@@ -6,10 +6,11 @@ import { getJobsFromS3 } from "./jobs";
 export async function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
     try {
         const jobs = await getJobsFromS3(new S3(), process.env.BUCKET!);
-        await batchRotateKeys(new IAM(), jobs)
-            .then(() => callback(null, `Successfully completed key rotation.`));
+        console.log(`Retrieved jobs: ${JSON.stringify(jobs)}`);
+        await batchRotateKeys(new IAM(), jobs);
+        callback(null, `Successfully completed key rotation.`);
     } catch (err) {
-        console.log(err);
+        console.error(err);
         callback(err);
     }
 }
