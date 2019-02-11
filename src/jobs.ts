@@ -69,7 +69,7 @@ function getJobFromS3(s3: S3, bucket: string, key: string) {
         .promise()
         .then((data) => {
             if (!data.Body) {
-                return;
+                return {};
             }
             return JSON.parse(data.Body.toString());
         });

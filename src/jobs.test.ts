@@ -76,6 +76,57 @@ test('non-job in bucket', async (done) => {
     done();
 });
 
+test('object with no key in bucket', async (done) => {
+    listStub.withArgs({
+        Bucket: bucket, // Ignore this, think it's a bug in the declaration file
+    }).returns({
+        promise: () => Promise.resolve({
+            Contents: [{
+            }],
+        }),
+    });
+
+    getStub.withArgs({
+        Bucket: bucket,
+        Key: 'test-key',
+    }).returns({
+        promise: () => Promise.resolve({
+            Body: JSON.stringify({ foo: "bar" }),
+        }),
+    });
+
+    const jobs = await getJobsFromS3(s3, bucket);
+    if (jobs.length !== 0) {
+        fail();
+    }
+    done();
+});
+
+test('object with no body data in bucket', async (done) => {
+    listStub.withArgs({
+        Bucket: bucket, // Ignore this, think it's a bug in the declaration file
+    }).returns({
+        promise: () => Promise.resolve({
+            Contents: [{
+                Key: 'test-key',
+            }],
+        }),
+    });
+
+    getStub.withArgs({
+        Bucket: bucket,
+        Key: 'test-key',
+    }).returns({
+        promise: () => Promise.resolve({}),
+    });
+
+    const jobs = await getJobsFromS3(s3, bucket);
+    if (jobs.length !== 0) {
+        fail();
+    }
+    done();
+});
+
 const job: RotationJob = {
     user: 'TestUser',
     vcsProvider: 'github',
