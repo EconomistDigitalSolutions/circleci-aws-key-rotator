@@ -7,6 +7,8 @@ provider:
   region: ${opt:region, 'us-east-1'}
   profile: ${opt:profile, 'default'}
   memorySize: 128
+  apiKeys:
+    - keyRotationJobApiKey
   environment:
     BUCKET: !Ref JobBucket
   iamRoleStatements:
@@ -21,6 +23,7 @@ provider:
     - Effect: Allow
       Action:
         - s3:GetObject
+        - s3:PutObject
         - s3:ListBucket
       Resource:
         - !Join ["", ["arn:aws:s3:::", !Ref JobBucket]]
@@ -32,6 +35,15 @@ functions:
     description: Rotates the Access Keys for CircleCI
     events:
       - schedule: cron(0 4 * * ? *)
+
+  putJob:
+    handler: src/handler.putJob
+    description: API Lambda to add a new job
+    events:
+      - http: 
+          path: /
+          method: post
+          private: true
 
 resources:
   Resources:
