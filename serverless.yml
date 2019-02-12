@@ -5,10 +5,10 @@ provider:
   name: aws
   runtime: nodejs8.10
   region: ${opt:region, 'us-east-1'}
-  profile: ${opt:profile}
+  profile: ${opt:profile, 'default'}
   memorySize: 128
   environment:
-    BUCKET: ${opt:bucketName}
+    BUCKET: !Ref JobBucket
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -23,8 +23,8 @@ provider:
         - s3:GetObject
         - s3:ListBucket
       Resource:
-        - "arn:aws:s3:::${opt:bucketName}"
-        - "arn:aws:s3:::${opt:bucketName}/*"
+        - !Join ["", ["arn:aws:s3:::", !Ref JobBucket]]
+        - !Join ["", ["arn:aws:s3:::", !Ref JobBucket, "/*"]]
         
 functions:
   rotate:
@@ -38,7 +38,7 @@ resources:
     JobBucket:
       Type: AWS::S3::Bucket
       Properties: 
-        BucketName: ${opt:bucketName}
+        AccessControl: Private
 
 plugins:
   - serverless-plugin-typescript
