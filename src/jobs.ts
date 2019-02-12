@@ -1,4 +1,3 @@
-import AWS = require("aws-sdk");
 import { S3 } from "aws-sdk";
 
 export interface RotationJob {
@@ -19,10 +18,27 @@ function isJob(arg: any): arg is RotationJob {
         arg.apiToken !== undefined;
 }
 
-export async function getJobsFromS3(s3: AWS.S3, bucket: string): Promise<RotationJob[]> {
+export async function addJobToS3(s3: S3, bucket: string, job: any) {
+    if (!isJob(job)) {
+        throw new Error(`Provided object is not a valid job: ${JSON.stringify(job)}`);
+    }
+
+    let key = new Date().toISOString();
+    key = `${key.substring(0, key.indexOf('T'))}-${job.user}.json`;
+
+    const params: S3.PutObjectRequest = {
+        Bucket: bucket,
+        Body: JSON.stringify(job),
+        Key: key,
+    };
+
+    return s3.putObject(params).promise();
+}
+
+export async function getJobsFromS3(s3: S3, bucket: string): Promise<RotationJob[]> {
     console.log(`Retrieving jobs from S3 Bucket: ${bucket}`);
 
-    const listParams: AWS.S3.ListObjectsV2Request = {
+    const listParams: S3.ListObjectsV2Request = {
         Bucket: bucket,
     };
 
@@ -60,7 +76,7 @@ export async function getJobsFromS3(s3: AWS.S3, bucket: string): Promise<Rotatio
 
 function getJobFromS3(s3: S3, bucket: string, key: string) {
     console.log(`Retrieving file ${key} from S3 Bucket: ${bucket}`);
-    const params: AWS.S3.GetObjectRequest = {
+    const params: S3.GetObjectRequest = {
         Bucket: bucket,
         Key: key,
     };
