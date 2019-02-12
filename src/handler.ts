@@ -17,13 +17,20 @@ export async function rotateKeys(event: ScheduledEvent, context: Context, callba
 
 export async function putJob(event: APIGatewayEvent, context: Context, callback: Callback) {
     if (!event.body) {
-        throw new Error(`No body on request.`);
+        throw new Error(`Request data not provided`);
     }
 
     try {
-        await addJobToS3(new S3(), process.env.BUCKET!, event.body);
+        await addJobToS3(new S3(), process.env.BUCKET!, JSON.parse(event.body));
+        callback(null, {
+            statusCode: 200,
+            body: JSON.stringify({ "message": "Added job successfully." }),
+        });
     } catch (err) {
         console.error(err);
-        callback(err);
+        callback(JSON.stringify({
+            statusCode: 400,
+            body: JSON.stringify({ "message": err }),
+        }));
     }
 }
