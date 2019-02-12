@@ -30,6 +30,7 @@ export async function addJobToS3(s3: S3, bucket: string, job: any) {
         Bucket: bucket,
         Body: JSON.stringify(job),
         Key: key,
+        ContentEncoding: "application/json",
     };
 
     return s3.putObject(params).promise();
