@@ -138,6 +138,7 @@ describe('add job to S3', () => {
             Bucket: bucket,
             Body: JSON.stringify(job),
             Key: key,
+            ContentEncoding: "application/json",
         }).returns({
             promise: () => Promise.resolve(),
         });
@@ -159,6 +160,7 @@ describe('add job to S3', () => {
             Bucket: bucket,
             Body: JSON.stringify(job),
             Key: key,
+            ContentEncoding: "application/json",
         }).returns({
             promise: () => Promise.reject('test error'),
         });
