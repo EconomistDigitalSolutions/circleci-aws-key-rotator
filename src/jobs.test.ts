@@ -1,6 +1,6 @@
 import { S3 } from "aws-sdk";
 import * as sinon from "sinon";
-import { getJobsFromS3, RotationJob, addJobToS3 } from "./jobs";
+import { addJobToS3, getJobsFromS3, RotationJob } from "./jobs";
 
 const s3: S3 = new S3();
 const listStub = sinon.stub(s3, 'listObjectsV2');
