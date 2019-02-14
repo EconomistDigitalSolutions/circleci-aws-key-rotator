@@ -30,7 +30,7 @@ provider:
         - !Join ["", ["arn:aws:s3:::", !Ref JobBucket, "/*"]]
 
 functions:
-  rotate:
+  rotateKeys:
     handler: src/handler.rotateKeys
     description: Rotates the Access Keys for CircleCI
     events:
