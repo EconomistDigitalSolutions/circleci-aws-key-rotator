@@ -15,22 +15,48 @@ export async function rotateKeys(event: ScheduledEvent, context: Context, callba
     }
 }
 
-export async function putJob(event: APIGatewayEvent, context: Context, callback: Callback) {
+export async function addJob(event: APIGatewayEvent, context: Context, callback: Callback) {
     if (!event.body) {
         throw new Error(`Request data not provided`);
     }
 
     try {
         await addJobToS3(new S3(), process.env.BUCKET!, JSON.parse(event.body));
-        callback(null, {
-            statusCode: 200,
-            body: JSON.stringify({ "message": "Added job successfully." }),
-        });
+        callback(null, success("Added job successfully."));
     } catch (err) {
         console.error(err);
-        callback(JSON.stringify({
-            statusCode: 400,
-            body: JSON.stringify({ "message": err }),
-        }));
+        callback(null, error(err));
     }
+}
+
+export async function getJobs(event: APIGatewayEvent, context: Context, callback: Callback) {
+    try {
+        const jobs = (await getJobsFromS3(new S3(), process.env.BUCKET!))
+            .map((job) => ({
+                user: job.user,
+                project: job.project,
+            }));
+        callback(null, success(jobs));
+    } catch (err) {
+        console.error(err);
+        callback(null, error(err));
+    }
+}
+
+function success(data: any) {
+    return response(200, data);
+}
+
+function error(err: any) {
+    return response(400, err.toString());
+}
+
+function response(code: number, data: any) {
+    return {
+        statusCode: code,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    };
 }

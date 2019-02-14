@@ -1,4 +1,4 @@
-service: 
+service:
   name: circleci-key-rotator
 
 provider:
@@ -18,7 +18,7 @@ provider:
         - iam:DeleteAccessKey
         - iam:CreateAccessKey
         - iam:UpdateAccessKey
-      Resource: 
+      Resource:
         - arn:aws:iam::*:user/*
     - Effect: Allow
       Action:
@@ -28,7 +28,7 @@ provider:
       Resource:
         - !Join ["", ["arn:aws:s3:::", !Ref JobBucket]]
         - !Join ["", ["arn:aws:s3:::", !Ref JobBucket, "/*"]]
-        
+
 functions:
   rotate:
     handler: src/handler.rotateKeys
@@ -36,20 +36,29 @@ functions:
     events:
       - schedule: cron(0 4 * * ? *)
 
-  putJob:
-    handler: src/handler.putJob
+  addJob:
+    handler: src/handler.addJob
     description: API Lambda to add a new job
     events:
-      - http: 
-          path: /
+      - http:
+          path: /jobs
           method: post
+          private: true
+
+  getJobs:
+    handler: src/handler.getJobs
+    description: API Lambda to get a list of existing jobs
+    events:
+      - http:
+          path: /jobs
+          method: get
           private: true
 
 resources:
   Resources:
     JobBucket:
       Type: AWS::S3::Bucket
-      Properties: 
+      Properties:
         AccessControl: Private
 
 plugins:
