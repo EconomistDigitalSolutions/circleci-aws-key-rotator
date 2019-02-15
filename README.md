@@ -3,6 +3,8 @@
 [![](https://img.shields.io/circleci/project/github/EconomistDigitalSolutions/circleci-aws-key-rotator/master.svg)](https://circleci.com/gh/EconomistDigitalSolutions/circleci-aws-key-rotator)
 [![codecov](https://codecov.io/gh/EconomistDigitalSolutions/circleci-aws-key-rotator/branch/master/graph/badge.svg)](https://codecov.io/gh/EconomistDigitalSolutions/circleci-aws-key-rotator)
 
+**This branch is maintained for legacy reasons and will not be merged into master. It exists to maintain an older form of the Key Rotator which only handled a single set of keys, instead of multiple keys.**
+
 AWS Lambda for rotating AWS Access keys used by CircleCI
 
 # Pre-Requisites
@@ -14,13 +16,13 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
 1. Clone the repository
 
     ```bash
-    git clone https://github.com/EconomistDigitalSolutions/circleci-aws-key-rotator.git
+    git clone --single-branch --branch individual-mode https://github.com/EconomistDigitalSolutions/circleci-aws-key-rotator.git
     ```
 
     or
 
     ```bash
-    git clone git@github.com:EconomistDigitalSolutions/circleci-aws-key-rotator.git
+    git clone --single-branch --branch individual-mode git@github.com:EconomistDigitalSolutions/circleci-aws-key-rotator.git
     ```
 
 2. Install dependencies
