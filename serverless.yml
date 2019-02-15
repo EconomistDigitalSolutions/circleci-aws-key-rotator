@@ -60,6 +60,10 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         AccessControl: Private
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
 
 plugins:
   - serverless-plugin-typescript
