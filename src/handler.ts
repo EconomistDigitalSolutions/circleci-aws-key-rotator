@@ -16,11 +16,11 @@ export async function rotateKeys(event: ScheduledEvent, context: Context, callba
 }
 
 export async function addJob(event: APIGatewayEvent, context: Context, callback: Callback) {
-    if (!event.body) {
-        throw new Error(`Request data not provided`);
-    }
-
     try {
+        if (!event.body) {
+            throw new Error(`Request data not provided`);
+        }
+
         await addJobToS3(new S3(), process.env.BUCKET!, JSON.parse(event.body));
         callback(null, success("Added job successfully."));
     } catch (err) {
