@@ -11,7 +11,7 @@ provider:
     - keyRotationJobApiKey
   environment:
     BUCKET: !Ref JobBucket
-  tags:
+  stackTags:
     Owner: ${opt:owner, ''}
     CreatedOn: ${opt:createdOn, ''}
   iamRoleStatements:
