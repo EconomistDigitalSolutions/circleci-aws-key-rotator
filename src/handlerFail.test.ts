@@ -6,35 +6,41 @@ process.env.BUCKET = 'TestBucket';
 jest.mock('./jobs');
 jest.mock('./batch');
 
-test('rotates keys unsuccessfully', (done) => {
-    rotateKeys(event, context, (err: string, result: any) => {
-        if (!err) {
-            fail();
-        }
-        console.error(err);
-        done();
+describe('rotateKeys', () => {
+    test('rotates keys unsuccessfully', (done) => {
+        rotateKeys(event, context, (err: string, result: any) => {
+            if (!err) {
+                fail();
+            }
+            console.error(err);
+            done();
+        });
     });
 });
 
-test('add job unsuccessfully', (done) => {
-    addJob(apiEvent, context, (err: string, result: any) => {
-        if (err) {
-            console.error(err);
-            fail();
-        }
-        expect(result.statusCode).toBe(400);
-        done();
+describe('addJob', () => {
+    test('add job unsuccessfully', (done) => {
+        addJob(apiEvent, context, (err: string, result: any) => {
+            if (err) {
+                console.error(err);
+                fail();
+            }
+            expect(result.statusCode).toBe(400);
+            done();
+        });
     });
 });
 
-test('gets jobs unsuccessfully', (done) => {
-    getJobs(apiEvent, context, (err: string, result: any) => {
-        if (err) {
-            console.error(err);
-            fail();
-        }
-        expect(result.statusCode).toBe(400);
-        done();
+describe('getJobs', () => {
+    test('gets jobs unsuccessfully', (done) => {
+        getJobs(apiEvent, context, (err: string, result: any) => {
+            if (err) {
+                console.error(err);
+                fail();
+            }
+            expect(result.statusCode).toBe(400);
+            done();
+        });
     });
 });
 
