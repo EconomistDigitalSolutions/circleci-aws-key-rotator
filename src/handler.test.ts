@@ -1,5 +1,6 @@
-import { Context, ScheduledEvent } from "aws-lambda";
-import { rotateKeys } from "./handler";
+import * as createEvent from 'aws-event-mocks';
+import { APIGatewayEvent, Context, ScheduledEvent } from "aws-lambda";
+import { addJob, getJobs, rotateKeys } from "./handler";
 
 process.env.BUCKET = 'TestBucket';
 jest.mock('./jobs');
@@ -12,6 +13,48 @@ test('rotates keys successfully', (done) => {
         }
         done();
     });
+});
+
+test('add job successfully', (done) => {
+    apiEvent.body = JSON.stringify({
+        user: 'fakeUser',
+
+    });
+    addJob(apiEvent, context, (err: string, result: any) => {
+        if (err) {
+            console.error(err);
+            fail();
+        }
+        expect(result.statusCode).toBe(200);
+        done();
+    });
+});
+
+test('add job no request data', (done) => {
+    apiEvent.body = null;
+    addJob(apiEvent, context, (err: string, result: any) => {
+        if (err) {
+            console.error(err);
+            fail();
+        }
+        expect(result.statusCode).toBe(400);
+        done();
+    });
+});
+
+test('gets jobs successfully', (done) => {
+    getJobs(apiEvent, context, (err: string, result: any) => {
+        if (err) {
+            console.error(err);
+            fail();
+        }
+        expect(result.statusCode).toBe(200);
+        done();
+    });
+});
+
+const apiEvent: APIGatewayEvent = createEvent({
+    template: 'aws:apiGateway',
 });
 
 const event: ScheduledEvent = {
