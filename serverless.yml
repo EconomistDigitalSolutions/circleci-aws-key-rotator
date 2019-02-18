@@ -10,7 +10,7 @@ provider:
   apiKeys:
     - keyRotationJobApiKey
   environment:
-    BUCKET: !Ref JobBucket#
+    BUCKET: !Ref JobBucket
   tags:
     Owner: ${opt:owner, ''}
     CreatedOn: ${opt:createdOn, ''}
