@@ -9,7 +9,9 @@
         "quotemark": false,
         "object-literal-sort-keys": false,
         "object-literal-key-quotes": false,
-        "max-line-length": false
+        "max-line-length": false,
+        "array-type": false,
+        "interface-name": false
     },
     "rulesDirectory": []
 }

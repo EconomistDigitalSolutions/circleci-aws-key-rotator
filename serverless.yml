@@ -1,23 +1,19 @@
-service: 
-  name: ${opt:projectName}-circleci-key-rotator
+service:
+  name: circleci-key-rotator
 
 provider:
   name: aws
   runtime: nodejs8.10
   region: ${opt:region, 'us-east-1'}
-  profile: ${opt:profile}
+  profile: ${opt:profile, 'default'}
   memorySize: 128
+  apiKeys:
+    - keyRotationJobApiKey
   environment:
-    # KeyRotator 
-    IAM_USER: ${opt:awsUser}
-    # CircleCI API
-    VCS_PROVIDER: ${opt:vcs, 'github'}
-    VCS_USER: ${opt:vcsUser, 'EconomistDigitalSolutions'}
-    PROJECT_NAME: ${opt:projectName}
-    API_TOKEN: ${opt:apiToken }
-    # CircleCI Env Vars
-    ACCESS_KEY_NAME: ${opt:accessKeyName, 'AWS_ACCESS_KEY_ID'}
-    SECRET_KEY_NAME: ${opt:secretKeyName, 'AWS_SECRET_ACCESS_KEY'}
+    BUCKET: !Ref JobBucket
+  tags:
+    Owner: ${opt:owner, ''}
+    CreatedOn: ${opt:createdOn, ''}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -25,15 +21,52 @@ provider:
         - iam:DeleteAccessKey
         - iam:CreateAccessKey
         - iam:UpdateAccessKey
-      Resource: 
-        - arn:aws:iam::${opt:awsAccountId}:user/${opt:awsUser}
-        
+      Resource:
+        - arn:aws:iam::*:user/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:ListBucket
+      Resource:
+        - !Join ["", ["arn:aws:s3:::", !Ref JobBucket]]
+        - !Join ["", ["arn:aws:s3:::", !Ref JobBucket, "/*"]]
+
 functions:
-  rotate:
+  rotateKeys:
     handler: src/handler.rotateKeys
-    description: Rotates the Access Keys for ${opt:awsUser}
+    description: Rotates the Access Keys for CircleCI
     events:
       - schedule: cron(0 4 * * ? *)
+
+  addJob:
+    handler: src/handler.addJob
+    description: API Lambda to add a new job
+    events:
+      - http:
+          path: /jobs
+          method: post
+          private: true
+
+  getJobs:
+    handler: src/handler.getJobs
+    description: API Lambda to get a list of existing jobs
+    events:
+      - http:
+          path: /jobs
+          method: get
+          private: true
+
+resources:
+  Resources:
+    JobBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: Private
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
 
 plugins:
   - serverless-plugin-typescript

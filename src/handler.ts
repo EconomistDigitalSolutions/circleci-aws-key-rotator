@@ -1,21 +1,62 @@
-import { KeyRotator } from "@economist/aws-key-rotator";
-import { Callback, Context, ScheduledEvent } from "aws-lambda";
-import { IAM } from "aws-sdk";
-import { sendKeyToCircleCI } from "./circleci";
+import { APIGatewayEvent, Callback, Context, ScheduledEvent } from "aws-lambda";
+import { IAM, S3 } from "aws-sdk";
+import { batchRotateKeys } from "./batch";
+import { addJobToS3, getJobsFromS3 } from "./jobs";
 
-export function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
-
-    // Get the User
-    const user = process.env.IAM_USER;
-    if (!user) {
-        callback('No IAM User Provided');
-        return;
+export async function rotateKeys(event: ScheduledEvent, context: Context, callback: Callback) {
+    try {
+        const jobs = await getJobsFromS3(new S3(), process.env.BUCKET!);
+        console.log(`Retrieved jobs: ${JSON.stringify(jobs)}`);
+        await batchRotateKeys(new IAM(), jobs);
+        callback(null, `Successfully completed key rotation.`);
+    } catch (err) {
+        console.error(err);
+        callback(err);
     }
+}
 
-    const iam = new IAM();
-    const keyRotator = new KeyRotator(iam, sendKeyToCircleCI);
+export async function addJob(event: APIGatewayEvent, context: Context, callback: Callback) {
+    try {
+        if (!event.body) {
+            throw new Error(`Request data not provided`);
+        }
 
-    keyRotator.rotateKeys(user)
-        .then(() => callback(null, `Successfully rotated Access Keys for ${user}`))
-        .catch((err) => callback(err));
+        await addJobToS3(new S3(), process.env.BUCKET!, JSON.parse(event.body));
+        callback(null, success("Added job successfully."));
+    } catch (err) {
+        console.error(err);
+        callback(null, error(err));
+    }
+}
+
+export async function getJobs(event: APIGatewayEvent, context: Context, callback: Callback) {
+    try {
+        const jobs = (await getJobsFromS3(new S3(), process.env.BUCKET!))
+            .map((job) => ({
+                user: job.user,
+                project: job.project,
+            }));
+        callback(null, success(jobs));
+    } catch (err) {
+        console.error(err);
+        callback(null, error(err));
+    }
+}
+
+function success(data: any) {
+    return response(200, data);
+}
+
+function error(err: any) {
+    return response(400, err.toString());
+}
+
+function response(code: number, data: any) {
+    return {
+        statusCode: code,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    };
 }

@@ -3,7 +3,7 @@
 [![](https://img.shields.io/circleci/project/github/EconomistDigitalSolutions/circleci-aws-key-rotator/master.svg)](https://circleci.com/gh/EconomistDigitalSolutions/circleci-aws-key-rotator)
 [![codecov](https://codecov.io/gh/EconomistDigitalSolutions/circleci-aws-key-rotator/branch/master/graph/badge.svg)](https://codecov.io/gh/EconomistDigitalSolutions/circleci-aws-key-rotator)
 
-AWS Lambda for rotating AWS Access keys used by CircleCI
+AWS stack for rotating AWS Access keys used by CircleCI. The stack stores [`Jobs`](#Jobs) representing IAM Users to rotate keys for and does a batch rotation of all the users it holds a `job` for.
 
 # Pre-Requisites
 1. An AWS IAM User set up to represent CircleCI.
@@ -29,43 +29,19 @@ AWS Lambda for rotating AWS Access keys used by CircleCI
     npm install
     ```
 
-3. Deploy (***N.B.** line breaks are included for reading clarity and should be removed or escaped before running the command*)
+3. Deploy 
 
     ```bash
-    npm run deploy -- 
-        --awsAccountId <value>
-        --profile <value> 
-        --awsUser <value> 
-        --projectName <value>
-        --apiToken <value>
-        [--region <value>] 
-        [--vcs <value>] 
-        [--vcsUser <value>]
-        [--accessKeyName <value>] 
-        [--secretKeyName <value>]
+    npm run deploy -- [--profile <value>] [--region <value>]
     ```
-This will deploy a Lambda to the specified AWS account which runs once per day at 04:00am.
+This will deploy a Lambda which runs once per day at 04:00am to the AWS account specified by the profile.
 
 ## Options
-**awsAccountId**
-
-The AWS Account ID.
-
 **profile**
 
+*Optional; default = 'default'*
+
 The AWS profile to deploy on.
-
-**awsUser**
-
-The AWS IAM User that represents CircleCI. This is the user whose key(s) will be rotated.
-
-**projectName**
-
-The name of the project. This should be the project that is using CircleCI for CI/CD.
-
-**apiToken**
-
-The API Token used to grant the Lambda access to the CircleCI environment variables for the project.
 
 **region** 
 
@@ -73,29 +49,65 @@ The API Token used to grant the Lambda access to the CircleCI environment variab
 
 The AWS Region to deploy the Lambda on.
 
-**vcs** 
+# Jobs
+Jobs are stored by the stack as JSON objects matching the below schema:
+```json
+{
+    "user": string,
+    "vcsProvider": string,
+    "vcsUser": string,
+    "project": string,
+    "apiToken": string,
+    "accessKeyName": string?,
+    "secretKeyName": string?
+}
+```
+**user**
 
-*Optional; default = 'github'*
+The IAM User to rotate the Access Keys for.
 
-The Version Control provider. Currently CircleCI supports either `github` or `bitbucket`.
+**vcsProvider**
 
-**vcsUser** 
+The VCS provider. Currently CircleCI supports `github` or `bitbucket`.
 
-*Optional; default = 'EconomistDigitalSolutions'*
+**vcsUser**
 
-The Version Control User that the project belongs to.
+The name of the VCS User.
 
-**accessKeyName**
+**project**
 
-*Optional; default = 'AWS_ACCESS_KEY_ID'*
+The name of the project, i.e. the repository name.
 
-The name of the environment variable that will store the AWS Access Key ID.
+**apiToken**
 
-**secretKeyName**
+The API token for accessing the CircleCI API.
 
-*Optional; default = 'AWS_SECRET_ACCESS_KEY'*
+**accessKeyName** *(Optional)*
 
-The name of the environment variable that will store the AWS Secret Access Key.
+The name to use for the environment variable that stores the Access Key value on CircleCI.
+
+**secretKeyName** *(Optional)*
+
+The name to use for the environment variable that stores the Secret Key value on CircleCI.
+
+# API
+
+## Get Jobs
+```
+Method: GET 
+Path: /jobs
+```
+
+Gets the list of jobs currently stored by the stack.
+
+## Add Job
+```
+Method: POST 
+Path: /jobs
+Data: Valid Job JSON
+```
+
+Adds a new job to the stack. The job should be included as the data on the request.
 
 # Issues/Todo
 1. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)

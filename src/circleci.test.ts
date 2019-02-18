@@ -1,6 +1,6 @@
 import { AccessKey } from "aws-sdk/clients/iam";
 import fetchMock = require("fetch-mock");
-import { sendKeyToCircleCI } from "./circleci";
+import { createCircleCIHandler } from "./circleci";
 
 const key: AccessKey = {
     AccessKeyId: 'AccessKeyId',
@@ -17,7 +17,7 @@ test('successfully sent request', (done) => {
 
     fetchMock.post('*', Promise.resolve({}));
 
-    sendKeyToCircleCI(key)
+    createCircleCIHandler("", "", "", "")(key)
         .then(() => {
             expect(fetchMock.called()).toBeTruthy();
             done();
@@ -31,7 +31,7 @@ test('successfully sent request', (done) => {
 test('received bad response', (done) => {
     fetchMock.post('*', Promise.resolve(400));
 
-    sendKeyToCircleCI(key)
+    createCircleCIHandler("", "", "", "")(key)
         .then(() => {
             fail();
             done();
@@ -46,7 +46,7 @@ test('failed to send request', (done) => {
 
     fetchMock.post('*', Promise.reject('Test'));
 
-    sendKeyToCircleCI(key)
+    createCircleCIHandler("", "", "", "")(key)
         .then(() => {
             fail();
             done();
