@@ -33,7 +33,7 @@
     "jest-fetch-mock": "^2.1.1",
     "jest-junit": "^6.3.0",
     "node-fetch": "^2.3.0",
-    "serverless": "^1.37.1",
+    "serverless": "^1.35.1",
     "serverless-offline": "^3.33.0",
     "serverless-plugin-optimize": "^4.0.2-rc.1",
     "serverless-plugin-typescript": "^1.1.5",
