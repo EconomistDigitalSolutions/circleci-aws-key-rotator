@@ -132,8 +132,7 @@ describe('get jobs from S3', () => {
 
 describe('add job to S3', () => {
     test('successfully add job', async (done) => {
-        let key = new Date().toISOString();
-        key = `${key.substring(0, key.indexOf('T'))}-${job.user}.json`;
+        const key = `${job.user}.json`;
         putStub.withArgs({
             Bucket: bucket,
             Body: JSON.stringify(job),
@@ -154,8 +153,7 @@ describe('add job to S3', () => {
     });
 
     test('failed to add job', async (done) => {
-        let key = new Date().toISOString();
-        key = `${key.substring(0, key.indexOf('T'))}-${job.user}.json`;
+        const key = `${job.user}.json`;
         putStub.withArgs({
             Bucket: bucket,
             Body: JSON.stringify(job),

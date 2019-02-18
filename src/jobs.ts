@@ -23,13 +23,10 @@ export async function addJobToS3(s3: S3, bucket: string, job: any) {
         throw new Error(`Provided object is not a valid job: ${JSON.stringify(job)}`);
     }
 
-    let key = new Date().toISOString();
-    key = `${key.substring(0, key.indexOf('T'))}-${job.user}.json`;
-
     const params: S3.PutObjectRequest = {
         Bucket: bucket,
         Body: JSON.stringify(job),
-        Key: key,
+        Key: `${job.user}.json`,
         ContentEncoding: "application/json",
     };
 
