@@ -68,11 +68,11 @@ The IAM User to rotate the Access Keys for.
 
 **vcsProvider**
 
-The VCS provider. Currently CircleCI supports `github` or `bitbucket`.
+The version control provider. Currently CircleCI supports `github` or `bitbucket`.
 
 **vcsUser**
 
-The name of the VCS User.
+The name of the version control system user.
 
 **project**
 
@@ -80,7 +80,7 @@ The name of the project, i.e. the repository name.
 
 **apiToken**
 
-The API token for accessing the CircleCI API.
+The API token for accessing the CircleCI API. CircleCI API keys can be created [here](https://circleci.com/account/api).
 
 **accessKeyName** *(Optional)*
 
@@ -108,6 +108,31 @@ Data: Valid Job JSON
 ```
 
 Adds a new job to the stack. The job should be included as the data on the request.
+
+# Triggering API
+
+## Through the console
+
+The API can be triggered through the AWS console.
+
+1. Navigate to `API Gatway` in the AWS console.
+2. Navigate to the `circleci-key-rotator` API.
+3. Click on the method that you wish to trigger (e.g. `/jobs/GET`).
+4. Click `Test` on the Method Execution screen.
+5. If the endpoint requires parameters (i.e. POSTing to /jobs) add those to `Request Body`.
+6. Click the `Test` button on the Method Test screen.
+
+## Via Curl
+
+Prerequisites:
+
+* An API Gateway API key. This can be retrieved through the console (see [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-setup-api-key-with-console.html)).
+* The API endpoint url e.g. https://123456.execute-api.eu-west-2.amazonaws.com/stage1/jobs/. This can be retrieved through the API dashboard in the console.
+
+```bash
+export API_KEY=some_long_string
+curl -H "x-api-key: $API_KEY" https://123456.execute-api.eu-west-2.amazonaws.com/stage1/jobs/
+```
 
 # Issues/Todo
 1. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)
