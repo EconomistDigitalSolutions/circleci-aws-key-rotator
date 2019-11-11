@@ -109,5 +109,16 @@ Data: Valid Job JSON
 
 Adds a new job to the stack. The job should be included as the data on the request.
 
+# Triggering API
+
+The API can be triggered through the AWS console.
+
+1. Navigate to `API Gatway` in the AWS console.
+2. Navigate to the `circleci-key-rotator` API.
+3. Click on the method that you wish to trigger (e.g. `/jobs/GET`).
+4. Click `Test` on the Method Execution screen.
+5. If the endpoint requires parameters (i.e. POSTing to /jobs) add those to `Request Body`.
+6. Click the `Test` button on the Method Test screen.
+
 # Issues/Todo
 1. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)
