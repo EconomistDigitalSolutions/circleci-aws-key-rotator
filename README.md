@@ -111,6 +111,8 @@ Adds a new job to the stack. The job should be included as the data on the reque
 
 # Triggering API
 
+## Through the console
+
 The API can be triggered through the AWS console.
 
 1. Navigate to `API Gatway` in the AWS console.
@@ -119,6 +121,18 @@ The API can be triggered through the AWS console.
 4. Click `Test` on the Method Execution screen.
 5. If the endpoint requires parameters (i.e. POSTing to /jobs) add those to `Request Body`.
 6. Click the `Test` button on the Method Test screen.
+
+## Via Curl
+
+Prerequisites:
+
+* An API Gateway API key. This can be retrieved through the console (see [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-setup-api-key-with-console.html)).
+* The API endpoint url e.g. https://123456.execute-api.eu-west-2.amazonaws.com/stage1/jobs/. This can be retrieved through the API dashboard in the console.
+
+```bash
+export API_KEY=some_long_string
+curl -H "x-api-key: $API_KEY" https://123456.execute-api.eu-west-2.amazonaws.com/stage1/jobs/
+```
 
 # Issues/Todo
 1. Make the timer configurable. (How? Raw cron syntax as a string param seems likely to be buggy.)
