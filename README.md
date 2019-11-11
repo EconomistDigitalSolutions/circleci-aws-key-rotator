@@ -68,11 +68,11 @@ The IAM User to rotate the Access Keys for.
 
 **vcsProvider**
 
-The VCS provider. Currently CircleCI supports `github` or `bitbucket`.
+The version control provider. Currently CircleCI supports `github` or `bitbucket`.
 
 **vcsUser**
 
-The name of the VCS User.
+The name of the version control system user.
 
 **project**
 
@@ -80,7 +80,7 @@ The name of the project, i.e. the repository name.
 
 **apiToken**
 
-The API token for accessing the CircleCI API.
+The API token for accessing the CircleCI API. CircleCI API keys can be created [here](https://circleci.com/account/api).
 
 **accessKeyName** *(Optional)*
 
