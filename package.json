@@ -34,7 +34,7 @@
     "jest-junit": "^6.3.0",
     "node-fetch": "^2.3.0",
     "serverless": "^1.35.1",
-    "serverless-offline": "^3.33.0",
+    "serverless-offline": "^12.0.3",
     "serverless-plugin-optimize": "^4.0.2-rc.1",
     "serverless-plugin-typescript": "^1.1.5",
     "sinon": "^7.2.3",
