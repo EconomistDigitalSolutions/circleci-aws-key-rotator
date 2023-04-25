@@ -16,7 +16,7 @@
   "dependencies": {
     "@economist/aws-key-rotator": "^1.1.1",
     "@types/isomorphic-fetch": "0.0.34",
-    "aws-sdk": "^2.404.0",
+    "aws-sdk": "^2.1354.0",
     "isomorphic-fetch": "^2.2.1"
   },
   "devDependencies": {
